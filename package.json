@@ -24,13 +24,9 @@
     "homebridge": ">=0.2.0"
   },
   "dependencies": {
-    "hap-nodejs-community-types": "https://github.com/homespun/hap-nodejs-community-types.git",
     "request": "^2.65.0",
     "express": "^4.13.3",
-    "mdns": ">=2.3.3",
-    "httpdispatcher": ">=2.0.1",
     "debug": "^2.2.0",
-    "mcuiot-logger": "^0.0.2",
     "ws": "^0.8.0"
   },
   "author": "NorthernMan54",
