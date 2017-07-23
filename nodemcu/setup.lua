@@ -32,9 +32,9 @@ local function wifi_start(list_aps)
   if list_aps then
     local found = 0
     for key,value in pairs(list_aps) do
-      if config.SSID and config.SSID[key] then
+      if passwords.SSID and passwords.SSID[key] then
         wifi.setmode(wifi.STATION);
-        wifi.sta.config(key,config.SSID[key])
+        wifi.sta.config(key,passwords.SSID[key])
         wifi.sta.connect()
         print("Connecting to " .. key .. " ...")
         found = 1

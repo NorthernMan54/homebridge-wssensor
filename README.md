@@ -15,6 +15,24 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 * Support for Legacy mcuiot mode?
 * Support for data logging to mcuiot-logger?
 
+# Supported sensors
+
+* HC-SR501 Motion Sensor Module
+
+# Backlog - Plugin
+
+# Backlog - NodeMCU
+
+* Stop committing passwords to github!! - Done
+
+# Installation - homebridge-wssensor
+
+# Installation - NodeMCU
+
+# Configuration - homebridge-wssensor
+
+# Configuration - NodeMCU
+
 # Credits
 
 * cflurin - Borrowed websocket implementation from homebridge-websocket

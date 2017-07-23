@@ -1,6 +1,8 @@
 
 config = require("config")
 print("Heap Available: -c " .. node.heap())
+passwords = require("passwords")
+
 led = require("led")
 print("Heap Available: -l " .. node.heap())
 bme = require("bme")
