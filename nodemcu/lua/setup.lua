@@ -19,6 +19,7 @@ local function wifi_wait_ip()
     register_mdns()
     tmr.stop(6)
     wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED,wifi_reboot)
+    ms.start()
     app.start()
   end
 end

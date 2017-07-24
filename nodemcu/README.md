@@ -29,7 +29,8 @@ http://www.schematics.com/editor/nodemcu-dht22-yl-69-35878/
 1. Using http://nodemcu-build.com, create a custom firmware containing at least
    these modules:
 
-   adc,bme280,bit,dht,file,gpio,mdns,net,node,tmr,uart,wifi
+   adc,bit,bme280,dht,file,gpio,i2c,mdns,net,node,tmr,uart,websocket,wifi
+
 
 2. Please use esptool to install the float firmware onto your nodemcu.  There are alot of guides for this, so I won't repeat it here.
 

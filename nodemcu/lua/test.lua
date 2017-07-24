@@ -15,6 +15,9 @@ setup = require("setup")
 print("Heap Available: -setup " .. node.heap())
 led.boot()
 print("Heap Available: -boot " .. node.heap())
+
+ms = require("motion")
+
 setup.start()
 print("Heap Available: -start " .. node.heap())
 -- Never gets here

@@ -2,8 +2,8 @@ local module = {}
 
 function module.start()
 -- Turn off YL-69
-gpio.mode(5, gpio.OUTPUT)
-gpio.write(5, gpio.LOW)
+gpio.mode(config.YL69P, gpio.OUTPUT)
+gpio.write(config.YL69P, gpio.LOW)
  -- Start a simple http server
 print("Web Server Started")
 srv=net.createServer(net.TCP)
@@ -11,7 +11,7 @@ srv:listen(80,function(conn)
   conn:on("receive",function(conn,payload)
     led.flashRed()
     print(payload)
-    gpio.write(5, gpio.HIGH)
+    gpio.write(config.YL69P, gpio.HIGH)
     tmr.alarm(2,1,tmr.ALARM_SINGLE,function()
       moist_value=adc.read(config.YL69)
       gpio.write(5, gpio.LOW)
