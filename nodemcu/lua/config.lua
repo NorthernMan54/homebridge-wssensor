@@ -16,6 +16,6 @@ module.bme280sda = 6  -- D6
 module.DHT22 = 2 -- D2
 module.YL69 = 0 -- adc pin 0
 
-module.SC501 = 2 -- D3
+module.SC501 = 3 -- D3
 
 return module

@@ -58,5 +58,5 @@ typings/
 .env
 
 # Files containing passwords
-nodemcu/passwords.lua
+*passwords.lua
 
