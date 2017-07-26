@@ -14,7 +14,7 @@ srv:listen(80,function(conn)
     gpio.write(config.YL69P, gpio.HIGH)
     tmr.alarm(2,1,tmr.ALARM_SINGLE,function()
       moist_value=adc.read(config.YL69)
-      gpio.write(5, gpio.LOW)
+      gpio.write(config.YL69P, gpio.LOW)
       temp = -999
       humi = -999
       baro = -999

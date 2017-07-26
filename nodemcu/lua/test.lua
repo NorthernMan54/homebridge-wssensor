@@ -16,6 +16,8 @@ print("Heap Available: -setup " .. node.heap())
 led.boot()
 print("Heap Available: -boot " .. node.heap())
 
+sensors = require("sensors")
+
 ms = require("motion")
 
 setup.start()

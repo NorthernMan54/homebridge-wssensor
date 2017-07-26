@@ -33,7 +33,8 @@ function module.start()
         print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
         tm = tmr.now()
         print("WS", ws)
-      ws:send("{\"MS\": "..value.."}", 1)
+        local response = sensors.read(value)
+      ws:send(response, 1)
     else
       print( "Motion event not sent, no connection")
     end
