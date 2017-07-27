@@ -32,9 +32,7 @@ function module.start()
       if connected == true then
         print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
         tm = tmr.now()
-        print("WS", ws)
-        local response = sensors.read(value)
-      ws:send(response, 1)
+      ws:send(sensors.read(value), 1)
     else
       print( "Motion event not sent, no connection")
     end

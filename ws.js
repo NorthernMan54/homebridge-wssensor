@@ -4,6 +4,7 @@ var util = require('util');
 var Utils = require('./lib/utils.js').Utils;
 var WsSensorAccessory = require('./lib/accessory.js').Accessory;
 var Websocket = require('./lib/websocket.js').Websocket;
+var debug = require('debug')('wssensor');
 
 var Accessory, Service, Characteristic, UUIDGen;
 var cachedAccessories = 0;
@@ -32,11 +33,13 @@ function WsSensorPlatform(log, config, api) {
   this.accessories = {};
   this.hap_accessories = {};
 
-  this.log.debug("storagePath = %s", storagePath);
-  this.log.debug("config = %s", JSON.stringify(config));
+  debug("storagePath = %s", storagePath);
+  debug("config = %s", JSON.stringify(config));
 
   if (typeof(config) !== "undefined" && config !== null) {
-    this.port = config.port || {"port": 4050};
+    this.port = config.port || {
+      "port": 4050
+    };
   } else {
     this.log.error("config undefined or null!");
     this.log("storagePath = %s", storagePath);
@@ -70,57 +73,58 @@ function WsSensorPlatform(log, config, api) {
     this.api.on('didFinishLaunching', function() {
       this.log("Plugin - DidFinishLaunching");
 
-     this.Websocket.startServer();
+      this.Websocket.startServer();
 
-      this.log.debug("Number of chaced Accessories: %s", cachedAccessories);
+      debug("Number of chaced Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
 
     }.bind(this));
-    //this.log.debug("WsSensorPlatform %s", JSON.stringify(this.accessories));
+    //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));
   }
 }
 
 WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
 
-  var name = accessoryDef.name;
+  var name = accessoryDef.Hostname;
   var ack, message;
   var isValid;
+
+  this.log("addAccessory", name);
 
   if (!this.accessories[name]) {
     var uuid = UUIDGen.generate(name);
 
     var newAccessory = new Accessory(name, uuid);
     newAccessory.reachable = true;
-    newAccessory.context.service_name = accessoryDef.service;
+    newAccessory.context.service_name = accessoryDef.Model;
 
-    //this.log.debug("addAccessory UUID = %s", newAccessory.UUID);
+    //debug("addAccessory UUID = %s", newAccessory.UUID);
 
-    var i_accessory = new WsSensorAccessory(this.buildParams(accessoryDef));
-    isValid = i_accessory.addService(newAccessory);
-    if (isValid) {
-      i_accessory.configureAccessory(newAccessory);
+    newAccessory.getService(Service.AccessoryInformation)
+      .setCharacteristic(Characteristic.Manufacturer, "WSSENSOR")
+      .setCharacteristic(Characteristic.Model, accessoryDef.Model + " " + accessoryDef.Version)
+      .setCharacteristic(Characteristic.SerialNumber, name);
 
-      this.accessories[name] = i_accessory;
-      this.hap_accessories[name] = newAccessory;
-      this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
+//    newAccessory.on('identify', self.Identify.bind(self, accessory));
 
-      ack = true;
-      message =  "accessory '" + name + "' is added.";
-    } else {
-      ack = false;
-      message = "service '" + accessoryDef.service + "' undefined.";
+    switch (accessoryDef.Model) {
+      case "MS":
+        newAccessory.addService(Service.MotionSensor, name);
+
+        break;
     }
+
+    this.accessories[name] = name;
+    this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
+
   } else {
-    ack = false;
-    message = "name '" + name + "' is already used.";
+    debug("accessory already created");
   }
-  this.log("addAccessory %s", message);
-  this.Websocket.sendAck(ack, message);
 }
 
 WsSensorPlatform.prototype.configureAccessory = function(accessory) {
 
-  //this.log.debug("configureAccessory %s", JSON.stringify(accessory.services, null, 2));
+  //debug("configureAccessory %s", JSON.stringify(accessory.services, null, 2));
 
   cachedAccessories++;
   var name = accessory.displayName;
@@ -149,7 +153,7 @@ WsSensorPlatform.prototype.removeAccessory = function(name) {
   var ack, message;
 
   if (typeof(this.accessories[name]) !== "undefined") {
-    this.log.debug("removeAccessory '%s'", name);
+    debug("removeAccessory '%s'", name);
 
     this.api.unregisterPlatformAccessories(plugin_name, platform_name, [this.hap_accessories[name]]);
     delete this.accessories[name];
@@ -175,16 +179,22 @@ WsSensorPlatform.prototype.getAccessories = function(name) {
       for (var k in this.accessories) {
         //this.log("getAccessories %s", JSON.stringify(this.accessories[k], null, 2));
         service = this.accessories[k].service_name;
-        characteristics =  this.accessories[k].i_value;
-        def = {"service": service, "characteristics": characteristics};
+        characteristics = this.accessories[k].i_value;
+        def = {
+          "service": service,
+          "characteristics": characteristics
+        };
         accessories[k] = def;
       }
-    break;
+      break;
 
     default:
       service = this.accessories[name].service_name;
-      characteristics =  this.accessories[name].i_value;
-      def = {"service": service, "characteristics": characteristics};
+      characteristics = this.accessories[name].i_value;
+      def = {
+        "service": service,
+        "characteristics": characteristics
+      };
       accessories[name] = def;
   }
 
@@ -192,7 +202,7 @@ WsSensorPlatform.prototype.getAccessories = function(name) {
   this.Websocket.sendAccessories(accessories);
 }
 
-WsSensorPlatform.prototype.buildParams = function (accessoryDef) {
+WsSensorPlatform.prototype.buildParams = function(accessoryDef) {
 
   var params = {
     "accessoryDef": accessoryDef,
@@ -201,6 +211,6 @@ WsSensorPlatform.prototype.buildParams = function (accessoryDef) {
     "Characteristic": Characteristic,
     "WebSocket": this.WebSocket
   }
-  //this.log.debug("configureAccessories %s", JSON.stringify(params.accessory_config));
+  debug("configureAccessories %s", JSON.stringify(params));
   return params;
 }
