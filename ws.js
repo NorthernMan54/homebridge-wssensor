@@ -57,7 +57,8 @@ function WsSensorPlatform(log, config, api) {
     "Characteristic": Characteristic,
     "addAccessory": this.addAccessory.bind(this),
     "removeAccessory": this.removeAccessory.bind(this),
-    "getAccessories": this.getAccessories.bind(this)
+    "getAccessories": this.getAccessories.bind(this),
+    "sendEvent": this.sendEvent.bind(this)
   }
   this.Websocket = new Websocket(params);
 
@@ -83,6 +84,26 @@ function WsSensorPlatform(log, config, api) {
   }
 }
 
+//{ "Hostname": "NODE-2BA0FF", "Model": "MS", "Version": "2.0", "Firmware": "2.1.0", "Data": {  "Motion": "1" }}
+
+
+WsSensorPlatform.prototype.sendEvent = function(message) {
+  var name = message.Hostname;
+
+  for (var k in message.Data) {
+    debug(k, message.Data, message.Data[k]);
+    switch (k) {
+      case "Motion":
+        this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
+          .updateValue(message.Data[k]);
+        debug("sendEvent", this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected));
+        this.log("Device %s set to %s", name, message.Data[k]);
+        break;
+    }
+  }
+}
+
+
 WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
 
   var name = accessoryDef.Hostname;
@@ -105,7 +126,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
       .setCharacteristic(Characteristic.Model, accessoryDef.Model + " " + accessoryDef.Version)
       .setCharacteristic(Characteristic.SerialNumber, name);
 
-//    newAccessory.on('identify', self.Identify.bind(self, accessory));
+    //    newAccessory.on('identify', self.Identify.bind(self, accessory));
 
     switch (accessoryDef.Model) {
       case "MS":
@@ -114,7 +135,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
         break;
     }
 
-    this.accessories[name] = name;
+    this.accessories[name] = newAccessory;
     this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
 
   } else {
@@ -128,24 +149,9 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
 
   cachedAccessories++;
   var name = accessory.displayName;
-  var uuid = accessory.UUID;
 
-  var accessoryDef = {};
-  accessoryDef.name = name;
-  accessoryDef.service = accessory.context.service_name;
+  this.accessories[name] = accessory;
 
-  if (this.accessories[name]) {
-    this.log.error("configureAccessory %s UUID %s already used.", name, uuid);
-    process.exit(1);
-  }
-
-  accessory.reachable = true;
-
-  var i_accessory = new WsSensorAccessory(this.buildParams(accessoryDef));
-  i_accessory.configureAccessory(accessory);
-
-  this.accessories[name] = i_accessory;
-  this.hap_accessories[name] = accessory;
 }
 
 WsSensorPlatform.prototype.removeAccessory = function(name) {
