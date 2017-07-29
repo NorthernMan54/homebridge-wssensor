@@ -20,7 +20,10 @@ function module.start()
   ws:on("close", function(_, status)
     print('connection closed', status)
     connected = false;
-    ws:connect('ws://bart:8081')
+    local wsReOpen = tmr.create()
+    wsReOpen:register(10000, tmr.ALARM_SINGLE, function (t) ws:connect('ws://bart:8081'); t:unregister() end)
+    wsReOpen:start()
+
   end)
 
 

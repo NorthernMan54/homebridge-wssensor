@@ -19,4 +19,11 @@ module.YL69P = 7 -- 5 with DHT and 7 with BME
 
 module.SC501 = 3 -- D3
 
+-- Hardware Timers
+-- 1 - Used by LED to flash LED's during setup
+-- 2 - Used by main, to read moisture sensor
+-- 6 - Used by setup, If wifi setup doesn't work REBOOT
+-- wsReOpen - Used by Motion, to re-open websocket connection in case of connection loss
+
+
 return module

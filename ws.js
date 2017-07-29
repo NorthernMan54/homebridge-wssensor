@@ -94,10 +94,11 @@ WsSensorPlatform.prototype.sendEvent = function(message) {
     debug(k, message.Data, message.Data[k]);
     switch (k) {
       case "Motion":
+        var value = message.Data[k] > 0;
         this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
-          .updateValue(message.Data[k]);
-        debug("sendEvent", this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected));
-        this.log("Device %s set to %s", name, message.Data[k]);
+          .updateValue(value,null,this);
+//        debug("sendEvent", this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected));
+//        this.log("Device %s set to %s", name, message.Data[k],value);
         break;
     }
   }
@@ -130,7 +131,11 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
 
     switch (accessoryDef.Model) {
       case "MS":
-        newAccessory.addService(Service.MotionSensor, name);
+        var motion = newAccessory.addService(Service.MotionSensor, name);
+
+//        motion
+//            .getCharacteristic(Characteristic.MotionDetected)
+//            .on('get', this.getPowerState.bind(this));
 
         break;
     }
