@@ -5,6 +5,7 @@ var Utils = require('./lib/utils.js').Utils;
 var WsSensorAccessory = require('./lib/accessory.js').Accessory;
 var Websocket = require('./lib/websocket.js').Websocket;
 var debug = require('debug')('wssensor');
+var Advertise = require('./lib/advertise.js').Advertise;
 
 var Accessory, Service, Characteristic, UUIDGen;
 var cachedAccessories = 0;
@@ -62,6 +63,8 @@ function WsSensorPlatform(log, config, api) {
   }
   this.Websocket = new Websocket(params);
 
+  this.Advertise = new Advertise(params);
+
   Utils.read_npmVersion(plugin_name, function(npm_version) {
     if (npm_version > plugin_version) {
       this.log("A new version %s is avaiable", npm_version);
@@ -76,8 +79,12 @@ function WsSensorPlatform(log, config, api) {
 
       this.Websocket.startServer();
 
-      debug("Number of chaced Accessories: %s", cachedAccessories);
+      this.Advertise.createAdvertisement();
+
+      debug("Number of cached Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
+
+//      this.Websocket.updateParams(params);
 
     }.bind(this));
     //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));

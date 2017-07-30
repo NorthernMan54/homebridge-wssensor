@@ -29,23 +29,27 @@ function module.start()
 
   function motionEvent(value)
 
-    if value == last then
-      print("Motion Event - False")
+    -- Ignore sensor for first minute
+    if tmr.time() > 60 then
+      if value == last then
+        print("Motion Event - False")
+      else
+        if connected == true then
+          print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
+          tm = tmr.now()
+          ws:send(sensors.read(value), 1)
+        else
+          print( "Motion event not sent, no connection")
+        end
+      end
     else
-      if connected == true then
-        print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
-        tm = tmr.now()
-      ws:send(sensors.read(value), 1)
-    else
-      print( "Motion event not sent, no connection")
+      print( "Motion Event - Ignored, sensor warming up")
     end
+    last = value
   end
-  last = value
 
-end
-
-gpio.trig(config.SC501, "both", motionEvent)
-print("Motion Sensor Enabled")
+  gpio.trig(config.SC501, "both", motionEvent)
+  print("Motion Sensor Enabled")
 end
 
 return module
