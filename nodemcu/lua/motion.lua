@@ -8,6 +8,20 @@ function module.start()
   last = 0
   connected = false;
 
+  local res = mdns.mdns_query()
+  if (res) then
+    for k, v in pairs(res) do
+      -- output key name
+      print(k)
+      for k1, v1 in pairs(v) do
+        -- output service descriptor fields
+        print('  '..k1..': '..v1)
+      end
+    end
+  else
+    print('no result')
+  end
+
   ws = websocket.createClient()
   ws:connect('ws://bart:8081')
   ws:on("connection", function(ws)

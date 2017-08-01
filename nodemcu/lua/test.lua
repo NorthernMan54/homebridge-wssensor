@@ -18,6 +18,7 @@ print("Heap Available: -boot " .. node.heap())
 
 sensors = require("sensors")
 
+mdns = require("mdns")
 ms = require("motion")
 
 setup.start()
