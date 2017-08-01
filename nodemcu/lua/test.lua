@@ -5,7 +5,7 @@ passwords = require("passwords")
 
 led = require("led")
 print("Heap Available: -l " .. node.heap())
-bme = require("bme")
+--bme = require("bme")
 print("Heap Available: -b " .. node.heap())
 app = require("main")
 print("Heap Available: -m " .. node.heap())
@@ -18,7 +18,7 @@ print("Heap Available: -boot " .. node.heap())
 
 sensors = require("sensors")
 
-mdns = require("mdns")
+qdns = require("qdns")
 ms = require("motion")
 
 setup.start()
