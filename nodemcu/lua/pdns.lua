@@ -1,36 +1,26 @@
 local module = {}
 
-local function mdns_parse(service, data, answers)
-
-  --- Helper function: parse DNS name field, supports pointers
-  -- @param data     received datagram
-  -- @param offset    offset within datagram (1-based)
-  -- @return  parsed name
-  -- @return  offset of first byte behind name (1-based)
-  local function parse_name(data, offset)
-    local n, d, l = '', '', data:byte(offset)
-    while (l > 0) do
-      if (l >= 192) then -- pointer
-        local p = (l % 192) * 256 + data:byte(offset + 1)
-        return n..d..parse_name(data, p + 1), offset + 2
-      end
-      n = n..d..data:sub(offset + 1, offset + l)
-      offset = offset + l + 1
-      l = data:byte(offset)
-      d = '.'
+local function parse_name(data, offset)
+  local n, d, l = '', '', data:byte(offset)
+  while (l > 0) do
+    if (l >= 192) then -- pointer
+      local p = (l % 192) * 256 + data:byte(offset + 1)
+      return n..d..parse_name(data, p + 1), offset + 2
     end
-    return n, offset + 1
+    n = n..d..data:sub(offset + 1, offset + l)
+    offset = offset + l + 1
+    l = data:byte(offset)
+    d = '.'
   end
+  return n, offset + 1
+end
 
-  --- Helper function: check if a single bit is set in a number
-  -- @param val       number
-  -- @param mask      mask (single bit only)
-  -- @return  true if bit is set, false if not
-  local function bit_set(val, mask)
-    return val % (mask + mask) >= mask
-  end
+local function bit_set(val, mask)
+  return val % (mask + mask) >= mask
+end
 
-  -- decode and check header
+function module.mdns_parse(service, data, answers)
+
   if (not data) then
     return nil, 'no data'
   end

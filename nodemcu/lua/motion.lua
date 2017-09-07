@@ -8,7 +8,7 @@ function module.start()
   last = 0
   connected = false;
 
-  res = qdns.mdns_query()
+  res = sdns.mdns_query()
   if (res) then
     for k, v in pairs(res) do
       -- output key name

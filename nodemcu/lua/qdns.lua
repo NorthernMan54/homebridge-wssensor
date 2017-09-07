@@ -42,8 +42,9 @@ function module.mdns_query()
     print("Heap Available: -qdns " .. node.heap())
     pdns = require("pdns")
     print("Heap Available: -pdns " .. node.heap())
+--    print("PreParse" ..service.."->".. data.."->" ..answers)
     pdns.mdns_parse(service, data, answers)
-    pdns=""
+    pdns=nil
   end)
   port, ip = udpSocket:getaddr()
   print(string.format("local UDP socket address / port: %s:%d", ip, port))
