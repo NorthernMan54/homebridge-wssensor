@@ -36,13 +36,13 @@ local function wifi_start(list_aps)
   end
 end
 
-function module.start()
-  print("Setting Init Timer")
-  -- reboot after 60 seconds if we don't get wifi
-
+function module.start(wifi_ready)
+  package.loaded['setup']=nil
   print("Configuring Wifi ...")
-  wifi.setmode(wifi.STATION);
+  wifi.setmode(wifi.STATION)
+  wifi.eventmon.register(wifi.eventmon.STA_GOT_IP,wifi_ready)
   wifi.sta.getap(wifi_start)
+
 end
 
 return module

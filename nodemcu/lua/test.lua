@@ -11,40 +11,34 @@ local function dump(o)
   end
 end
 
-local function mdns_wait_svc()
-  if lua_mdns.getServices()== nil then
-    print("WS Socket unavailable, waiting")
-  else
-    ws = lua_mdns.getServices()
-    tmr.stop(1)
-    print("WS Socket available http://"..ws.ipv4..":"..ws.port)
-    lua_mdns = nil
-    print("Heap Available: -post ws  " .. node.heap() )
+local function hb_found(ws)
+  print("WS Socket available http://"..ws.ipv4..":"..ws.port)
+  lua_mdns = nil
+  tmr.softwd(-1)
 
-  end
+  print("Heap Available: -pre motion  " .. node.heap() )
+  ms = require('motion')
+  print("Heap Available: -motion  " .. node.heap() )
+  ms.start("ws://"..ws.ipv4..":"..ws.port)
+  collectgarbage()
 end
 
-local function wifi_wait_ip()
-  if wifi.sta.getip()== nil then
-    print("IP unavailable, Waiting...")
-  else
-    tmr.stop(1)
-    print("\n====================================")
-    print("ESP8266 mode is: " .. wifi.getmode())
-    print("MAC address is: " .. wifi.ap.getmac())
-    print("IP is "..wifi.sta.getip())
-    print("====================================")
-    tmr.stop(6)
-    --wifi.eventmon.register(wifi.eventmon.STA_DISCONNECTED,node.restart())
+local function wifi_ready()
+  print("\n====================================")
+  print("ESP8266 mode is: " .. wifi.getmode())
+  print("MAC address is: " .. wifi.ap.getmac())
+  print("IP is "..wifi.sta.getip())
+  print("====================================")
+  setup=nil
 
+  print("Heap Available: -mdns  " .. node.heap() ) -- 18720
 
-    print("Heap Available: -mdns  " .. node.heap() ) -- 18720
-
-    lua_mdns.mdns_query("_dht22._tcp")
-
-    tmr.alarm(1, 2500, 1, mdns_wait_svc)
-  end
+  lua_mdns.mdns_query("_wssensor._tcp", hb_found)
 end
+
+
+-- Start of code
+tmr.softwd(60)
 
 print("Heap Available:  " .. node.heap()) -- 38984
 config = require("config")
@@ -66,12 +60,4 @@ print("Heap Available: -boot " .. node.heap()) -- 24144
 
 lua_mdns = require("lua-mdns")
 
---ms = require("motion")
-
-setup.start()
-
-tmr.alarm(1, 2500, 1, wifi_wait_ip)
-
--- Reboot if wifi doesn't connect in 60 seconds
-
-tmr.alarm(6,60000, tmr.ALARM_SINGLE, node.restart)
+setup.start(wifi_ready)

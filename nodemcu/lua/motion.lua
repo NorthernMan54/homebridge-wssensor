@@ -1,29 +1,17 @@
 local module = {}
 
-function module.start()
+function module.start(wsserver)
   -- Enable triggers for Motion sensor
 
+  sensors = require('sensors')
+  print("Heap Available: -sensors  " .. node.heap() )
   gpio.mode(config.SC501, gpio.INT, gpio.PULLUP)
   tm = tmr.now()
   last = 0
   connected = false;
 
-  res = sdns.mdns_query()
-  if (res) then
-    for k, v in pairs(res) do
-      -- output key name
-      print(k)
-      for k1, v1 in pairs(v) do
-        -- output service descriptor fields
-        print('  '..k1..': '..v1)
-      end
-    end
-  else
-    print('no result')
-  end
-
   ws = websocket.createClient()
-  ws:connect('ws://bart:8081')
+  ws:connect(wsserver)
   ws:on("connection", function(ws)
     print('got ws connection', ws)
     connected = true;
@@ -35,7 +23,7 @@ function module.start()
     print('connection closed', status)
     connected = false;
     local wsReOpen = tmr.create()
-    wsReOpen:register(10000, tmr.ALARM_SINGLE, function (t) ws:connect('ws://bart:8081'); t:unregister() end)
+    wsReOpen:register(10000, tmr.ALARM_SINGLE, function (t) ws:connect(wsserver); t:unregister() end)
     wsReOpen:start()
 
   end)
@@ -43,6 +31,7 @@ function module.start()
 
   function motionEvent(value)
 
+    print("Heap Available: event  " .. node.heap() )
     -- Ignore sensor for first minute
     if tmr.time() > 60 then
       if value == last then

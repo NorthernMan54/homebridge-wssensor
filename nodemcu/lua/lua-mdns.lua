@@ -116,6 +116,8 @@ local function mdns_parse(service, data, answers)
     nscount = data:byte(9) * 256 + data:byte(10),
     arcount = data:byte(11) * 256 + data:byte(12),
   }
+  --print("header"..dump(header))
+
   if (not bit_set(header.flags, 0x8000)) then
     return nil, 'not a reply'
   end
@@ -202,6 +204,70 @@ local function mdns_parse(service, data, answers)
     offset = offset + 10 + rdlength
   end
 
+  -- Additional records
+
+  for i = 1, header.arcount do
+    if (offset > len) then
+      return nil, 'truncated'
+    end
+
+    name, offset = parse_name(data, offset)
+    local type = data:byte(offset + 0) * 256 + data:byte(offset + 1)
+    local rdlength = data:byte(offset + 8) * 256 + data:byte(offset + 9)
+    local rdoffset = offset + 10
+
+    -- A record (IPv4 address)
+    if (type == 1) then
+      if (rdlength ~= 4) then
+        return nil, 'bad RDLENGTH with A record'
+      end
+      answers.a[name] = string.format('%d.%d.%d.%d', data:byte(rdoffset + 0), data:byte(rdoffset + 1), data:byte(rdoffset + 2), data:byte(rdoffset + 3))
+    end
+
+    -- PTR record (pointer)
+    if (type == 12) then
+      local target = parse_name(data, rdoffset)
+      table.insert(answers.ptr, target)
+    end
+
+    -- AAAA record (IPv6 address)
+    if (type == 28) then
+      if (rdlength ~= 16) then
+        return nil, 'bad RDLENGTH with AAAA record'
+      end
+      local offs = rdoffset
+      local aaaa = string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
+      while (offs < rdoffset + 14) do
+        offs = offs + 2
+        aaaa = aaaa..':'..string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
+      end
+
+      -- compress IPv6 address
+      for _, s in ipairs({ ':0:0:0:0:0:0:0:', ':0:0:0:0:0:0:', ':0:0:0:0:0:', ':0:0:0:0:', ':0:0:0:', ':0:0:' }) do
+        local r = aaaa:gsub(s, '::')
+        if (r ~= aaaa) then
+          aaaa = r
+          break
+        end
+      end
+      answers.aaaa[name] = aaaa
+    end
+
+    -- SRV record (service location)
+    if (type == 33) then
+      if (rdlength < 6) then
+        return nil, 'bad RDLENGTH with SRV record'
+      end
+      answers.srv[name] = {
+        target = parse_name(data, rdoffset + 6),
+        port = data:byte(rdoffset + 4) * 256 + data:byte(rdoffset + 5)
+      }
+    end
+
+    -- next answer record
+    offset = offset + 10 + rdlength
+  end
+
   return answers
 end
 
@@ -225,9 +291,8 @@ end
 --                      ipv4: IPv4 address
 --                      ipv6: IPv6 address
 --
-function module.mdns_query(service)
+function module.mdns_query(service,callback)
 
-  print("mDNS Query"..service)
   -- browse all services if no service name specified
   local browse = false
   if (not service) then
@@ -249,12 +314,14 @@ function module.mdns_query(service)
   net.multicastJoin("any", '224.0.0.251')
   local udpSocket = net.createUDPSocket()
 
+  local querySend = tmr.create()
+
   udpSocket:listen(5353)
   udpSocket:on("receive", function(s, data, port, ip)
     local response = { srv = {}, a = {}, aaaa = {}, ptr = {} }
     response, err = mdns_parse(service, data, response)
     if response then
-      --print(string.format("mDNS Response Received from %s:%d", ip, port) ..dump(response))
+      print(string.format("mDNS Response Received from %s:%d", ip, port) ..dump(response))
 
       services = nil
       for k, v in pairs(response.srv) do
@@ -278,21 +345,23 @@ function module.mdns_query(service)
             v.service = svc
             v.name = name
             services = v
-            print("Service "..dump(services))
+            --print("Service "..dump(services))
             udpSocket:close()
+            querySend:unregister()
+            callback(services)
           end
         end
       end
 
-      -- print("Service "..dump(services))
-
+    else
+      print(string.format("mDNS message parse error from %s:%d ", ip, port) ..err)
     end
   end)
 
-  local sendcount = 3
-  local querySend = tmr.create()
-  querySend:register( 1500, 1, function(t)
-    print("Sending mDNS Query"..service)
+  local sendcount = 500
+
+  querySend:register( 1000, 1, function(t)
+    print("Sending mDNS Query "..service)
     if udpSocket then
       udpSocket:send(5353, '224.0.0.251', mdns_make_query(service))
     end
