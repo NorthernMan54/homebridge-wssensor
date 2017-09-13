@@ -7,7 +7,7 @@ local function start()
   gpio.mode(config.ledBlue, gpio.OUTPUT)
   gpio.mode(config.ledRed, gpio.OUTPUT)
 
-  lighton=0
+  local lighton=0
   tmr.alarm(0,1000,1,function()
       if lighton==0 then
         lighton=1
@@ -46,6 +46,10 @@ end
 
 function module.connected()
   mode = 1
+end
+
+function module.mdns()
+  mode = 2
 end
 
 function module.error()

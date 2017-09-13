@@ -1,14 +1,10 @@
 local module = {}
 
 function module.start(wsserver)
-  -- Enable triggers for Motion sensor
-
-  sensors = require('sensors')
-  print("Heap Available: -sensors  " .. node.heap() )
   gpio.mode(config.SC501, gpio.INT, gpio.PULLUP)
-  tm = tmr.now()
-  last = 0
-  connected = false;
+  local tm = tmr.now()
+  local last = 0
+  local connected = false;
 
   ws = websocket.createClient()
   ws:connect(wsserver)
@@ -16,15 +12,15 @@ function module.start(wsserver)
     print('got ws connection', ws)
     connected = true;
   end)
-  ws:on("receive", function(_, msg, opcode)
+  ws:on("receive", function(sck, msg, opcode)
     print('got message:', msg, opcode) -- opcode is 1 for text message, 2 for binary
+    sck:send(sensors.read(gpio.read(config.SC501)), 1)
   end)
   ws:on("close", function(_, status)
     print('connection closed', status)
     connected = false;
-    local wsReOpen = tmr.create()
-    wsReOpen:register(10000, tmr.ALARM_SINGLE, function (t) ws:connect(wsserver); t:unregister() end)
-    wsReOpen:start()
+    -- Reboot if connection lost
+    node.restart()
 
   end)
 
@@ -40,6 +36,8 @@ function module.start(wsserver)
         if connected == true then
           print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
           tm = tmr.now()
+          local sensors = require('sensors')
+          print("Heap Available: -sensors  " .. node.heap() )
           ws:send(sensors.read(value), 1)
         else
           print( "Motion event not sent, no connection")

@@ -43,8 +43,6 @@
 
 local module = {}
 
-local services
-
 local function dump(o)
   if type(o) == 'table' then
     local s = '{ '
@@ -293,6 +291,7 @@ end
 --
 function module.mdns_query(service,callback)
 
+  package.loaded['lua-mdns']=nil
   -- browse all services if no service name specified
   local browse = false
   if (not service) then
@@ -313,23 +312,21 @@ function module.mdns_query(service,callback)
 
   net.multicastJoin("any", '224.0.0.251')
   local udpSocket = net.createUDPSocket()
-
   local querySend = tmr.create()
 
   udpSocket:listen(5353)
-  udpSocket:on("receive", function(s, data, port, ip)
+  udpSocket:on("receive", function(sck, data, port, ip)
     local response = { srv = {}, a = {}, aaaa = {}, ptr = {} }
+    local err
     response, err = mdns_parse(service, data, response)
     if response then
       print(string.format("mDNS Response Received from %s:%d", ip, port) ..dump(response))
 
-      services = nil
       for k, v in pairs(response.srv) do
         local pos = k:find('%.')
         if (pos and (pos > 1) and (pos < #k)) then
           local name, svc = k:sub(1, pos - 1), k:sub(pos + 1)
           if (browse) or (svc == service) then
-            --services = {}
             if (v.target) then
               if (response.a[v.target]) then
                 v.ipv4 = response.a[v.target]
@@ -344,11 +341,10 @@ function module.mdns_query(service,callback)
             end
             v.service = svc
             v.name = name
-            services = v
             --print("Service "..dump(services))
-            udpSocket:close()
+            sck:close()
             querySend:unregister()
-            callback(services)
+            callback(v)
           end
         end
       end
@@ -372,11 +368,6 @@ function module.mdns_query(service,callback)
   end)
   querySend:start()
 
-end
-
-function module.getServices()
-  package.loaded['lua-mdns']=nil
-  return services
 end
 
 return module

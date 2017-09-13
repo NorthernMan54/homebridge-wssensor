@@ -84,7 +84,7 @@ function WsSensorPlatform(log, config, api) {
       debug("Number of cached Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
 
-//      this.Websocket.updateParams(params);
+      //      this.Websocket.updateParams(params);
 
     }.bind(this));
     //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));
@@ -98,14 +98,22 @@ WsSensorPlatform.prototype.sendEvent = function(message) {
   var name = message.Hostname;
 
   for (var k in message.Data) {
-    debug(k, message.Data, message.Data[k]);
+    debug(k, message.Data[k]);
     switch (k) {
       case "Motion":
         var value = message.Data[k] > 0;
         this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
-          .updateValue(value,null,this);
-//        debug("sendEvent", this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected));
-//        this.log("Device %s set to %s", name, message.Data[k],value);
+          .updateValue(value, null, this);
+        break;
+      case "Temperature":
+        var value = message.Data[k];
+        this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
+          .updateValue(value, null, this);
+        break;
+      case "Humidity":
+        var value = message.Data[k];
+        this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentRelativeHumidity)
+          .updateValue(value, null, this);
         break;
     }
   }
@@ -137,12 +145,15 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
     //    newAccessory.on('identify', self.Identify.bind(self, accessory));
 
     switch (accessoryDef.Model) {
-      case "MS":
+      case "BME-MS":
         var motion = newAccessory.addService(Service.MotionSensor, name);
-
-//        motion
-//            .getCharacteristic(Characteristic.MotionDetected)
-//            .on('get', this.getPowerState.bind(this));
+        newAccessory.addService(Service.TemperatureSensor);
+        newAccessory
+          .getService(Service.TemperatureSensor)
+          .addCharacteristic(Characteristic.CurrentRelativeHumidity);
+        //        motion
+        //            .getCharacteristic(Characteristic.MotionDetected)
+        //            .on('get', this.getPowerState.bind(this));
 
         break;
     }

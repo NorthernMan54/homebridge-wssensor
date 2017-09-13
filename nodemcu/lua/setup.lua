@@ -22,8 +22,6 @@ local function wifi_start(list_aps)
         wifi.sta.connect()
         print("Connecting to " .. key .. " ...")
         found = 1
-        --config.SSID = nil -- can save memory
-
       end
     end
     if found == 0 then
