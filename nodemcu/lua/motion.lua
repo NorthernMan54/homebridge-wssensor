@@ -14,6 +14,7 @@ function module.start(wsserver)
   end)
   ws:on("receive", function(sck, msg, opcode)
     print('got message:', msg, opcode) -- opcode is 1 for text message, 2 for binary
+    local sensors = require('sensors')
     sck:send(sensors.read(gpio.read(config.SC501)), 1)
   end)
   ws:on("close", function(_, status)

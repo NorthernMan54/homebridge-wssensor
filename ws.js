@@ -135,29 +135,26 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
     newAccessory.reachable = true;
     newAccessory.context.service_name = accessoryDef.Model;
 
-    //debug("addAccessory UUID = %s", newAccessory.UUID);
-
     newAccessory.getService(Service.AccessoryInformation)
       .setCharacteristic(Characteristic.Manufacturer, "WSSENSOR")
       .setCharacteristic(Characteristic.Model, accessoryDef.Model + " " + accessoryDef.Version)
       .setCharacteristic(Characteristic.SerialNumber, name);
 
-    //    newAccessory.on('identify', self.Identify.bind(self, accessory));
+    var sensors = accessoryDef.Model.split('-');
 
-    switch (accessoryDef.Model) {
-      case "BME-MS":
-        var motion = newAccessory.addService(Service.MotionSensor, name);
-        newAccessory.addService(Service.TemperatureSensor);
-        newAccessory
-          .getService(Service.TemperatureSensor)
-          .addCharacteristic(Characteristic.CurrentRelativeHumidity);
-        //        motion
-        //            .getCharacteristic(Characteristic.MotionDetected)
-        //            .on('get', this.getPowerState.bind(this));
-
-        break;
+    for (var i = 0; i < sensors.length; i++) {
+      switch (sensors[i]) {
+        case "MS":
+          newAccessory.addService(Service.MotionSensor, name);
+          break;
+        case "BME":
+          newAccessory.addService(Service.TemperatureSensor, name);
+          newAccessory
+            .getService(Service.TemperatureSensor)
+            .addCharacteristic(Characteristic.CurrentRelativeHumidity);
+          break;
+      }
     }
-
     this.accessories[name] = newAccessory;
     this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
 
