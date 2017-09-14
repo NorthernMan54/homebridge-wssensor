@@ -1,12 +1,5 @@
 local module = {}
 
-local function register_mdns()
-  print("Registering service dht22 with mDNS")
-  mdns.register(config.ID, {service="dht22", hardware='NodeMCU'})
-end
-
-
-
 local function wifi_reboot()
   print("REBOOT....")
   node.restart()
@@ -17,8 +10,7 @@ local function wifi_start(list_aps)
     local found = 0
     for key,value in pairs(list_aps) do
       if passwords.SSID and passwords.SSID[key] then
-        wifi.setmode(wifi.STATION);
-        wifi.sta.config(key,passwords.SSID[key])
+        wifi.sta.config(passwords.SSID[key])
         wifi.sta.connect()
         print("Connecting to " .. key .. " ...")
         found = 1
@@ -39,7 +31,7 @@ function module.start(wifi_ready)
   print("Configuring Wifi ...")
   wifi.setmode(wifi.STATION)
   wifi.eventmon.register(wifi.eventmon.STA_GOT_IP,wifi_ready)
-  wifi.sta.getap(wifi_start)
+  wifi.sta.getap(0,wifi_start)
 
 end
 
