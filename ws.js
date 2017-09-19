@@ -94,53 +94,59 @@ function WsSensorPlatform(log, config, api) {
 //{ "Hostname": "NODE-2BA0FF", "Model": "MS", "Version": "2.0", "Firmware": "2.1.0", "Data": {  "Motion": "1" }}
 
 
-WsSensorPlatform.prototype.sendEvent = function(message) {
-  var name = message.Hostname;
+WsSensorPlatform.prototype.sendEvent = function(err, message) {
 
-  for (var k in message.Data) {
-    debug(k, message.Data[k]);
-    switch (k) {
-      case "Motion":
-        var value = message.Data[k] > 0;
-        this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
-          .updateValue(value, null, this);
-        break;
+  if (err) {
+    this.log("Not sending event due to Error")
+  } else {
 
-      case "Temperature":
-        var value = message.Data[k];
-        this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
-          .updateValue(value, null, this);
-        break;
+    var name = message.Hostname;
 
-      case "Humidity":
-        var value = message.Data[k];
-        this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentRelativeHumidity)
-          .updateValue(value, null, this);
-        break;
+    for (var k in message.Data) {
+      debug(k, message.Data[k]);
+      switch (k) {
+        case "Motion":
+          var value = message.Data[k] > 0;
+          this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
+            .updateValue(value, null, this);
+          break;
 
-      case "Status":
-        var value = message.Data[k];
-        switch (value) {
-          case 0:
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
-              .updateValue(true);
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
-              .updateValue(Characteristic.StatusFault.NO_FAULT);
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusLowBattery)
-              .updateValue(Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
-              .updateValue(Characteristic.StatusTampered.NOT_TAMPERED);
-            break;
-          default:
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
-              .updateValue(false);
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
-              .updateValue(Characteristic.StatusFault.GENERAL_FAULT);
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusLowBattery)
-              .updateValue(Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW);
-            this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
-              .updateValue(Characteristic.StatusTampered.TAMPERED);
-        }
+        case "Temperature":
+          var value = message.Data[k];
+          this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
+            .updateValue(value, null, this);
+          break;
+
+        case "Humidity":
+          var value = message.Data[k];
+          this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentRelativeHumidity)
+            .updateValue(value, null, this);
+          break;
+
+        case "Status":
+          var value = message.Data[k];
+          switch (value) {
+            case 0:
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
+                .updateValue(true);
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
+                .updateValue(Characteristic.StatusFault.NO_FAULT);
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusLowBattery)
+                .updateValue(Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
+                .updateValue(Characteristic.StatusTampered.NOT_TAMPERED);
+              break;
+            default:
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
+                .updateValue(false);
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
+                .updateValue(Characteristic.StatusFault.GENERAL_FAULT);
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusLowBattery)
+                .updateValue(Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW);
+              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
+                .updateValue(Characteristic.StatusTampered.TAMPERED);
+          }
+      }
     }
   }
 }

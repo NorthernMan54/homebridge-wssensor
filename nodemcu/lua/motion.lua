@@ -1,7 +1,16 @@
 local module = {}
 
+local function readSensor()
+  local motion = gpio.read(config.SC501)
+  local motionStatus = 0
+  if tmr.time() < 1 then
+    motionStatus = 1
+  end
+  return motion,motionStatus
+end
+
 function module.start(wsserver)
-  gpio.mode(config.SC501, gpio.INT, gpio.PULLUP)
+  gpio.mode(config.SC501, gpio.INT)
   local tm = tmr.now()
   local last = 0
   local connected = false;
@@ -15,7 +24,7 @@ function module.start(wsserver)
   ws:on("receive", function(sck, msg, opcode)
     print('got message:', msg, opcode) -- opcode is 1 for text message, 2 for binary
     local sensors = require('sensors')
-    sck:send(sensors.read(gpio.read(config.SC501)), 1)
+    sck:send(sensors.read(readSensor()), 1)
   end)
   ws:on("close", function(_, status)
     print('connection closed', status)
@@ -30,7 +39,7 @@ function module.start(wsserver)
 
     print("Heap Available: event  " .. node.heap() )
     -- Ignore sensor for first minute
-    if tmr.time() > 60 then
+    if tmr.time() > 1 then
       if value == last then
         print("Motion Event - False")
       else
@@ -39,7 +48,7 @@ function module.start(wsserver)
           tm = tmr.now()
           local sensors = require('sensors')
           print("Heap Available: -sensors  " .. node.heap() )
-          ws:send(sensors.read(value), 1)
+          ws:send(sensors.read(value,0), 1)
         else
           print( "Motion event not sent, no connection")
         end

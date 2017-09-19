@@ -5,7 +5,7 @@ function module.start()
 
 end
 
-function module.read(motion)
+function module.read(motion,motionStatus)
   -- Read sensors
   local status
   local moist_value = 0
@@ -29,7 +29,7 @@ function module.read(motion)
     end
     tempstring = "\"Temperature\": "..temp..
     ", \"Humidity\": "..humi..", \"Moisture\": "..moist_value..
-    ", \"Status\": "..status..", \"Barometer\": "..baro..", \"Dew\": "..dew.." "
+    ", \"Status\": "..status..", \"Barometer\": "..baro..", \"Dew\": "..dew
     filler = ","
     bme = nil
   end
@@ -43,12 +43,12 @@ function module.read(motion)
     end
     tempstring = "\"Temperature\": "..temp..
     ", \"Humidity\": "..humi..", \"Moisture\": "..moist_value..
-    ", \"Status\": "..status..", \"Barometer\": "..baro..", \"Dew\": "..dew.." "
+    ", \"Status\": "..status..", \"Barometer\": "..baro..", \"Dew\": "..dew
     filler = ","
   end
 
   if string.find(config.Model, "MS") then
-    motionstring = filler.." \"Motion\": \""..motion.."\""
+    motionstring = filler.." \"Motion\": "..motion..", \"MotionStatus\": "..motionStatus.." "
   end
 
   if string.find(config.Model, "GD") then
