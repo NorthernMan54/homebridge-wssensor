@@ -6,6 +6,7 @@ var WsSensorAccessory = require('./lib/accessory.js').Accessory;
 var Websocket = require('./lib/websocket.js').Websocket;
 var debug = require('debug')('wssensor');
 var Advertise = require('./lib/advertise.js').Advertise;
+var WebSocket = require('ws');
 
 var Accessory, Service, Characteristic, UUIDGen;
 var cachedAccessories = 0;
@@ -88,6 +89,26 @@ function WsSensorPlatform(log, config, api) {
 
     }.bind(this));
     //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));
+
+    setInterval(function() {
+      this.log("Broadcasting");
+      for (var k in this.accessories) {
+        this.log("Poll", k);
+        var ws = this.accessories[k].context.ws;
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send("1");
+        } else {
+          this.log("Device State", k, ws.readyState);
+          this.accessories[k].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
+            .updateValue(null, null, this, true);
+          this.accessories[k].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
+            .updateValue(null, null, this, true);
+        }
+
+      }
+    }.bind(this), 6000);
+
+
   }
 }
 
@@ -103,24 +124,24 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
     var name = message.Hostname;
 
     for (var k in message.Data) {
-      debug(k, message.Data[k]);
+      //      debug(k, message.Data[k]);
       switch (k) {
         case "Motion":
           var value = message.Data[k] > 0;
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
-            .updateValue(value, null, this);
+            .updateValue(value, null, this, null);
           break;
 
         case "Temperature":
           var value = message.Data[k];
           this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
-            .updateValue(value, null, this);
+            .updateValue(value, null, this, null);
           break;
 
         case "Humidity":
           var value = message.Data[k];
           this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentRelativeHumidity)
-            .updateValue(value, null, this);
+            .updateValue(value, null, this, null);
           break;
 
         case "Status":
@@ -152,7 +173,7 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
 }
 
 
-WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
+WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
   var name = accessoryDef.Hostname;
   var ack, message;
@@ -166,6 +187,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef) {
     var newAccessory = new Accessory(name, uuid);
     newAccessory.reachable = true;
     newAccessory.context.service_name = accessoryDef.Model;
+    newAccessory.context.ws = ws;
 
     newAccessory.getService(Service.AccessoryInformation)
       .setCharacteristic(Characteristic.Manufacturer, "WSSENSOR")
