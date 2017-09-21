@@ -25,7 +25,7 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 * Plugin advertises websocket server onto network via mDNS -- Done
 * Plugin creates HK accessory for sensor ( Have ability to alias sensor name in config.json )  -- 1/2 done
 * Plugin sends sensor state changes in realtime to HomeKit -- Done
-* Plugin use Low Battery or other status for warmup period
+* Plugin use Low Battery or other status for warmup period -- Not required
 * Default publishing every minute?  -- Done
 * Support for Legacy mcuiot mode?
 * Support for data logging to mcuiot-logger?
@@ -36,12 +36,13 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 * NodeMCU sends message to plugin containing sensor config -- Done
 * Sensor sends state changes in realtime to plugin via WebSockets -- Done
 * Allow sensor to warm up before publishing, I believe I read 1 minute -- Done
-* Have sensor send not available status during warm up period
-* Default publishing every minute?
+* Have sensor send not available status during warm up period -- Not required
+* Default publishing every minute? -- Done
 * Have sensor support multiple websocket servers?
 * Support for Legacy mcuiot mode?
 * Support for data logging to mcuiot-logger?
-* Stop committing passwords to github!! - Done
+* Stop committing passwords to github!! -- Done
+* Have plugin send "No Response" when sensor is missing -- Done
 
 # Installation - homebridge-wssensor
 
