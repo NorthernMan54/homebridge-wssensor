@@ -51,9 +51,14 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 # Configuration - homebridge-wssensor
 
 ``{
-  "platform" : "wssensor",
-  "name" : "wssensor",
-  "port": 8081
+  "platform": "wssensor",
+  "name": "wssensor",
+  "port": 8080,
+  "refresh": "60",
+  "leak": "10",
+  "aliases": {
+    "NODE-2BA0FF": "Porch Motion"
+  }
 }
 ``
 
@@ -62,3 +67,4 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 # Credits
 
 * cflurin - Borrowed websocket implementation from homebridge-websocket
+* Frank Edelhaeuser - Borrowed lua mDNS Discovery code, and updated to support NodeMCU
