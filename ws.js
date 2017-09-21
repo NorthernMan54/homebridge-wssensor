@@ -1,3 +1,20 @@
+// Sample Config
+//{
+//  "platform": "wssensor",
+//  "name": "wssensor",
+//  "port": 8080,
+//  "refresh": "60",
+//  "leak": "10",
+//  "aliases": {
+//    "NODE-2BA0FF": "Porch Motion"
+//  }
+//}
+
+// Requires special version of HAP-NodeJS
+// npm install https://github.com/NorthernMan54/HAP-NodeJS.git#Status
+//
+//npm install NorthernMan54/homebridge-wssensor
+
 'use strict';
 
 var util = require('util');
@@ -42,11 +59,17 @@ function WsSensorPlatform(log, config, api) {
     this.port = config.port || {
       "port": 4050
     };
+    this.refresh = config['refresh'] || 60; // Update every minute
   } else {
     this.log.error("config undefined or null!");
     this.log("storagePath = %s", storagePath);
     process.exit(1);
   }
+
+  if (typeof(config.aliases) !== "undefined" && config.aliases !== null) {
+    this.aliases = config.aliases;
+  }
+
 
   var plugin_version = Utils.readPluginVersion();
   this.log("%s v%s", plugin_name, plugin_version);
@@ -91,14 +114,15 @@ function WsSensorPlatform(log, config, api) {
     //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));
 
     setInterval(function() {
-      this.log("Broadcasting");
+      debug("Broadcasting");
       for (var k in this.accessories) {
-        this.log("Poll", k);
-        var ws = this.accessories[k].context.ws;
-        if (ws.readyState === WebSocket.OPEN) {
+
+        var ws = this.accessories[k].ws;
+        debug("Poll", k);
+        if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send("1");
         } else {
-          this.log("Device State", k, ws.readyState);
+          this.log("No socket", k);
           this.accessories[k].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
             .updateValue(null, null, this, true);
           this.accessories[k].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
@@ -106,7 +130,7 @@ function WsSensorPlatform(log, config, api) {
         }
 
       }
-    }.bind(this), 6000);
+    }.bind(this), this.refresh * 1000);
 
 
   }
@@ -148,24 +172,24 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
           var value = message.Data[k];
           switch (value) {
             case 0:
-              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
-                .updateValue(true);
-              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
-                .updateValue(Characteristic.StatusFault.NO_FAULT);
+              //              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
+              //                .updateValue(true);
+              //              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
+              //                .updateValue(Characteristic.StatusFault.NO_FAULT);
               this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusLowBattery)
                 .updateValue(Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL);
-              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
-                .updateValue(Characteristic.StatusTampered.NOT_TAMPERED);
+              //              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
+              //                .updateValue(Characteristic.StatusTampered.NOT_TAMPERED);
               break;
             default:
-              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
-                .updateValue(false);
-              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
-                .updateValue(Characteristic.StatusFault.GENERAL_FAULT);
+              //              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusActive)
+              //                .updateValue(false);
+              //              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusFault)
+              //                .updateValue(Characteristic.StatusFault.GENERAL_FAULT);
               this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusLowBattery)
                 .updateValue(Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW);
-              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
-                .updateValue(Characteristic.StatusTampered.TAMPERED);
+              //              this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.StatusTampered)
+              //                .updateValue(Characteristic.StatusTampered.TAMPERED);
           }
       }
     }
@@ -176,18 +200,23 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
 WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
   var name = accessoryDef.Hostname;
+  var displayName = this.aliases[name];
+  if (typeof(displayName) == "undefined")
+    displayName = name;
+
   var ack, message;
   var isValid;
 
-  this.log("addAccessory", name);
+  this.log("addAccessory", name, displayName);
 
   if (!this.accessories[name]) {
     var uuid = UUIDGen.generate(name);
 
-    var newAccessory = new Accessory(name, uuid);
+    var newAccessory = new Accessory(displayName, uuid);
     newAccessory.reachable = true;
     newAccessory.context.service_name = accessoryDef.Model;
-    newAccessory.context.ws = ws;
+    newAccessory.context.hostname = name;
+    newAccessory.ws = ws;
 
     newAccessory.getService(Service.AccessoryInformation)
       .setCharacteristic(Characteristic.Manufacturer, "WSSENSOR")
@@ -199,10 +228,10 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
     for (var i = 0; i < sensors.length; i++) {
       switch (sensors[i]) {
         case "MS":
-          newAccessory.addService(Service.MotionSensor, name);
+          newAccessory.addService(Service.MotionSensor, displayName);
           break;
         case "BME":
-          newAccessory.addService(Service.TemperatureSensor, name);
+          newAccessory.addService(Service.TemperatureSensor, displayName);
           newAccessory
             .getService(Service.TemperatureSensor)
             .addCharacteristic(Characteristic.CurrentRelativeHumidity);
@@ -222,10 +251,11 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   //debug("configureAccessory %s", JSON.stringify(accessory.services, null, 2));
 
   cachedAccessories++;
-  var name = accessory.displayName;
+  var name = accessory.context.hostname;
 
   this.accessories[name] = accessory;
 
+  this.log("configureAccessory", name);
 }
 
 WsSensorPlatform.prototype.removeAccessory = function(name) {
