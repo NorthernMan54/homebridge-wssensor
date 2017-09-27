@@ -63,10 +63,10 @@ function WsSensorPlatform(log, config, api) {
   } else {
     this.log.error("config undefined or null!");
     this.log("storagePath = %s", storagePath);
-    process.exit(1);
+    return
   }
 
-  if (typeof(config.aliases) !== "undefined" && config.aliases !== null) {
+  if ( typeof(config.aliases) !== "undefined" && config.aliases !== null) {
     this.aliases = config.aliases;
   }
 

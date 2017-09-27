@@ -32,7 +32,6 @@ function module.start(wifi_ready)
   wifi.setmode(wifi.STATION)
   wifi.eventmon.register(wifi.eventmon.STA_GOT_IP,wifi_ready)
   wifi.sta.getap(0,wifi_start)
-
 end
 
 return module
