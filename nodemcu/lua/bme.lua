@@ -9,12 +9,13 @@ function module.read()
   if device == 2 then
     status = 0
     local P = bme280.baro()
-    if P == 0 then
-     baro = 0
-     else 
-       baro = P / 1000
+    while P == nil do
+      tmr.delay(100)
+      P = bme280.baro()
     end
-  
+
+    baro = P / 1000
+
     --    print(string.format("QFE=%d.%03d", P/1000, P%1000))
 
     -- convert measure air pressure to sea level pressure

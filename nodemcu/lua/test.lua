@@ -28,6 +28,7 @@ end
 
 local function wifi_ready()
   print("\n====================================")
+  print("Name is:         "..config.ID)
   print("ESP8266 mode is: " .. wifi.getmode())
   print("MAC address is: " .. wifi.ap.getmac())
   print("IP is "..wifi.sta.getip())

@@ -1,3 +1,5 @@
+-- Rename this to passwords.lua, and add your WIFI SSID and Password
+
 local module = {}
 
 module.SSID = {}
