@@ -5,7 +5,7 @@ function module.start()
 
 end
 
-function module.read(motion,motionStatus)
+function module.read(motion, motionStatus, current)
   -- Read sensors
   local status
   local moist_value = 0
@@ -16,6 +16,7 @@ function module.read(motion,motionStatus)
   local gdstring = ""
   local motionstring = ""
   local tempstring = ""
+  local currentstring = ""
   local filler = ""
 
   if string.find(config.Model, "BME") then
@@ -55,6 +56,12 @@ function module.read(motion,motionStatus)
     local green, red = gd.getDoorStatus()
     gdstring = filler.." \"Green\": \""..green.."\", \"Red\": \""..red.."\""
   end
+
+  if current ~= nil then
+    if string.find(config.Model, "CU") then
+      currentstring = filler.." \"Current\": "..current
+    end
+  end
   --      print("Heap Available:" .. node.heap())
   --      print("33")
   majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
@@ -62,7 +69,7 @@ function module.read(motion,motionStatus)
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
   "\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..tempstring..""
-..gdstring..""..motionstring.." }}\n"
+..gdstring..""..motionstring..""..currentstring.." }}\n"
 print(response)
 
 return response

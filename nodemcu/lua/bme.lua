@@ -8,39 +8,27 @@ function module.read()
 
   if device == 2 then
     status = 0
-    local P = bme280.baro()
-    while P == nil do
+    local T,P,H,QNH = bme280.read()
+    while T == nil do
       tmr.delay(100)
-      P = bme280.baro()
+      T,P,H,QNH = bme280.read()
     end
 
     baro = P / 1000
-
-    --    print(string.format("QFE=%d.%03d", P/1000, P%1000))
-
-    -- convert measure air pressure to sea level pressure
-    --local QNH = bme280.qfe2qnh(P, alt)
-    --    print(string.format("QNH=%d.%03d", QNH/1000, QNH%1000))
-
-    local H, T = bme280.humi()
-    --    print(string.format("T=%d.%02d", T/100, T%100))
-    --    print(string.format("humidity=%d.%03d%%", H/1000, H%1000))
-
     temp = T / 100
-    humi = H / 1000
+    humi = H / 1000    
 
     local D = bme280.dewpoint(H, T)
     dew = D / 100
-    --    print(string.format("dew_point=%d.%02d", D/100, D%100))
 
-    -- altimeter function - calculate altitude based on current sea level pressure (QNH) and measure pressure
-    --    local P = bme280.baro()
-    --    local curAlt = bme280.altitude(P, QNH)
-    --    print(string.format("altitude=%d.%02d", curAlt/100, curAlt%100))
   else
 
+    if device == nil then
+      status = 2
+    else
+      status = 1
+    end
     print( "BME280 Read Error %d", device )
-    status = 1
 
   end
 

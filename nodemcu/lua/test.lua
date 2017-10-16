@@ -20,7 +20,7 @@ local function hb_found(ws)
 
   collectgarbage()
   print("Heap Available: -pre motion  " .. node.heap() )
-  ms = require('vibration')
+  ms = require('current')
   print("Heap Available: -motion  " .. node.heap() )
   ms.start("ws://"..ws.ipv4..":"..ws.port)
 
