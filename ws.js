@@ -231,7 +231,12 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           newAccessory.addService(Service.MotionSensor, displayName);
           break;
         case "BME":
-          newAccessory.addService(Service.TemperatureSensor, displayName);
+          newAccessory.addService(Service.TemperatureSensor, displayName)
+          .getCharacteristic(Characteristic.CurrentTemperature)
+          .setProps({
+            minValue: -100,
+            maxValue: 100
+          });
           newAccessory
             .getService(Service.TemperatureSensor)
             .addCharacteristic(Characteristic.CurrentRelativeHumidity);
