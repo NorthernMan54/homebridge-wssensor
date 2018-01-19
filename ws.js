@@ -10,11 +10,6 @@
 //  }
 //}
 
-// Requires special version of HAP-NodeJS
-// npm install https://github.com/NorthernMan54/HAP-NodeJS.git#Status
-//
-//npm install NorthernMan54/homebridge-wssensor
-
 'use strict';
 
 var util = require('util');
@@ -24,24 +19,27 @@ var Websocket = require('./lib/websocket.js').Websocket;
 var debug = require('debug')('wssensor');
 var Advertise = require('./lib/advertise.js').Advertise;
 var WebSocket = require('ws');
+const moment = require('moment');
+var os = require("os");
+var hostname = os.hostname();
 
-var Accessory, Service, Characteristic, UUIDGen;
+var Accessory, Service, Characteristic, UUIDGen, CustomCharacteristic, FakeGatoHistoryService;
 var cachedAccessories = 0;
 
 var platform_name = "wssensor";
 var plugin_name = "homebridge-" + platform_name;
-var storagePath;
 
 module.exports = function(homebridge) {
   console.log("homebridge API version: " + homebridge.version);
+
+  CustomCharacteristic = require('./lib/CustomCharacteristic.js')(homebridge);
+  FakeGatoHistoryService = require('fakegato-history')(homebridge);
 
   Accessory = homebridge.platformAccessory;
 
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
   UUIDGen = homebridge.hap.uuid; // Universally Unique IDentifier
-
-  storagePath = homebridge.user.storagePath();
 
   homebridge.registerPlatform(plugin_name, platform_name, WsSensorPlatform, true);
 }
@@ -52,7 +50,6 @@ function WsSensorPlatform(log, config, api) {
   this.accessories = {};
   this.hap_accessories = {};
 
-  debug("storagePath = %s", storagePath);
   debug("config = %s", JSON.stringify(config));
 
   if (typeof(config) !== "undefined" && config !== null) {
@@ -62,11 +59,10 @@ function WsSensorPlatform(log, config, api) {
     this.refresh = config['refresh'] || 60; // Update every minute
   } else {
     this.log.error("config undefined or null!");
-    this.log("storagePath = %s", storagePath);
     return
   }
 
-  if ( typeof(config.aliases) !== "undefined" && config.aliases !== null) {
+  if (typeof(config.aliases) !== "undefined" && config.aliases !== null) {
     this.aliases = config.aliases;
   }
 
@@ -124,9 +120,9 @@ function WsSensorPlatform(log, config, api) {
         } else {
           this.log("No socket", k);
           this.accessories[k].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
-            .updateValue(null, null, this, true);
-          this.accessories[k].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
-            .updateValue(null, null, this, true);
+            .updateValue(new Error("Not Responding"));
+//          this.accessories[k].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
+//            .updateValue(new Error("Not Responding"));
         }
 
       }
@@ -142,7 +138,7 @@ function WsSensorPlatform(log, config, api) {
 WsSensorPlatform.prototype.sendEvent = function(err, message) {
 
   if (err) {
-    this.log("Not sending event due to Error")
+    this.log("Not sending event due to Error");
   } else {
 
     var name = message.Hostname;
@@ -153,19 +149,25 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
         case "Motion":
           var value = message.Data[k] > 0;
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
-            .updateValue(value, null, this, null);
+            .updateValue(value);
           break;
 
         case "Temperature":
           var value = message.Data[k];
           this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
-            .updateValue(value, null, this, null);
+            .updateValue(value);
           break;
 
         case "Humidity":
           var value = message.Data[k];
           this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentRelativeHumidity)
-            .updateValue(value, null, this, null);
+            .updateValue(value);
+          break;
+
+        case "Barometer":
+          var value = message.Data[k];
+          this.accessories[name].getService(Service.TemperatureSensor).getCharacteristic(CustomCharacteristic.AtmosphericPressureLevel)
+            .updateValue(value);
           break;
 
         case "Status":
@@ -193,6 +195,14 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
           }
       }
     }
+
+    this.accessories[name].loggingService.addEntry({
+      time: moment().unix(),
+      temp: roundInt(message.Data.Temperature),
+      pressure: roundInt(message.Data.Barometer),
+      humidity: roundInt(message.Data.Humidity)
+    });
+
   }
 }
 
@@ -221,7 +231,8 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
     newAccessory.getService(Service.AccessoryInformation)
       .setCharacteristic(Characteristic.Manufacturer, "WSSENSOR")
       .setCharacteristic(Characteristic.Model, accessoryDef.Model + " " + accessoryDef.Version)
-      .setCharacteristic(Characteristic.SerialNumber, name);
+      .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version)
+      .setCharacteristic(Characteristic.SerialNumber, hostname+"-"+name);
 
     var sensors = accessoryDef.Model.split('-');
 
@@ -232,17 +243,22 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           break;
         case "BME":
           newAccessory.addService(Service.TemperatureSensor, displayName)
-          .getCharacteristic(Characteristic.CurrentTemperature)
-          .setProps({
-            minValue: -100,
-            maxValue: 100
-          });
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .setProps({
+              minValue: -100,
+              maxValue: 100
+            });
           newAccessory
             .getService(Service.TemperatureSensor)
             .addCharacteristic(Characteristic.CurrentRelativeHumidity);
+          newAccessory
+            .getService(Service.TemperatureSensor)
+            .addCharacteristic(CustomCharacteristic.AtmosphericPressureLevel);
           break;
       }
     }
+    newAccessory.log = this.log;
+    newAccessory.loggingService = new FakeGatoHistoryService("weather", newAccessory,4032,this.refresh * 10/60);
     this.accessories[name] = newAccessory;
     this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
 
@@ -259,6 +275,9 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   var name = accessory.context.hostname;
 
   this.accessories[name] = accessory;
+
+  accessory.log = this.log;
+  accessory.loggingService = new FakeGatoHistoryService("weather", accessory,4032,this.refresh * 10/60);
 
   this.log("configureAccessory", name);
 }
@@ -328,4 +347,8 @@ WsSensorPlatform.prototype.buildParams = function(accessoryDef) {
   }
   debug("configureAccessories %s", JSON.stringify(params));
   return params;
+}
+
+function roundInt(string) {
+  return Math.round(parseFloat(string) * 10) / 10;
 }

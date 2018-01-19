@@ -21,27 +21,29 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 
 # Backlog - Plugin
 
-* Homebridge Plugin creates a websocket server to receive updates from nodemcu devices.  -- Done
-* Plugin advertises websocket server onto network via mDNS -- Done
-* Plugin creates HK accessory for sensor ( Have ability to alias sensor name in config.json )  -- Done
-* Plugin sends sensor state changes in realtime to HomeKit -- Done
-* Plugin sets Low Battery when sensor has an error -- Done
-* Plugin sets "No Response" when device is no longer responds on the network -- Done
-* Default publishing every minute?  -- Done
-* Support for Legacy mcuiot mode?
-* Support for data logging to mcuiot-logger?
+* [x] Homebridge Plugin creates a websocket server to receive updates from nodemcu devices.
+* [x] Plugin advertises websocket server onto network via mDNS
+* [x] Plugin creates HK accessory for sensor ( Have ability to alias sensor name in config.json )
+* [x] Plugin sends sensor state changes in realtime to HomeKit
+* [x] Plugin sets Low Battery when sensor has an error
+* [x] Plugin sets "No Response" when device is no longer responds on the network
+* [x] Default publishing every minute?
+* [ ] Remove redundant code from plugin
+* [X] Support fakeGato
+* [X] Switch to event based model
+* [ ] Support for Legacy mcuiot mode?
+* [ ] Support for data logging to mcuiot-logger?
 
 # Backlog - NodeMCU
 
-* NodeMCU discovers server by watching for mDNS advertisement -- Done
-* NodeMCU sends message to plugin containing sensor config -- Done
-* Sensor sends state changes in realtime to plugin via WebSockets -- Done
-* Allow sensor to warm up before publishing, I believe I read 1 minute -- Done
-* Have sensor send not available status during warm up period -- Not required
-* Have sensor support multiple websocket servers?
-* Support for Legacy mcuiot mode?
-* Support for data logging to mcuiot-logger?
-* Stop committing passwords to github!! -- Done
+* [x] NodeMCU discovers server by watching for mDNS advertisement
+* [x] NodeMCU sends message to plugin containing sensor config
+* [x] Sensor sends state changes in realtime to plugin via WebSockets
+* [x] Allow sensor to warm up before publishing, I believe I read 1 minute
+* [x] Have sensor send not available status during warm up period -- Not required
+* [ ] Have sensor support multiple websocket servers
+* [ ] Support for Legacy mcuiot mode
+* [x] Stop committing passwords to github!! -- Done
 
 # Installation - homebridge-wssensor
 
@@ -49,7 +51,8 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 
 # Configuration - homebridge-wssensor
 
-``{
+```
+{
   "platform": "wssensor",
   "name": "wssensor",
   "port": 8080,
@@ -59,9 +62,11 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
     "NODE-2BA0FF": "Porch Motion"
   }
 }
-``
+```
 
 # Configuration - NodeMCU
+
+See README in nodemcu directory
 
 # Credits
 

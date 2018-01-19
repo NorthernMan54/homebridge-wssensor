@@ -1,5 +1,3 @@
-# nodemcu-dht-yl69-mdns
-
 LUA programs for a nodeMCU device to read various sensors and integrate into homebridge-mcuiot.  Sensors supported are DHT22 Temperature and Humidity Sensor, Bosch BME280 Temperatue, Humidty and Barometric and the YL-69 Soil Moisture Sensor.  Runs as a simple web server, that responds with sensor data formatted in JSON. Device discovery is done via MDNS, and advertises itself as a dht22 service.
 
 JSON Response looks like this
@@ -36,10 +34,10 @@ http://www.schematics.com/editor/nodemcu-dht22-yl-69-35878/
 
 # Configuration
 
-1. WIFI Setup - In config.lua add your wifi SSID and passwords.  Please note
+1. WIFI Setup - Copy passwords_sample.lua to passwords.lua and add your wifi SSID and passwords.  Please note
    that the configuration supports multiple wifi networks, one per config line.
    ```
-   module.SSID["network name"] = "password"
+   module.SSID["SSID1"] = { ssid="SSID1", pwd = "password" }
    ```
 
 2. Model - Either DHT or DHT-YL, used by homebridge-mcuiot to determine if Moisture
