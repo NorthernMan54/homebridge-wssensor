@@ -57,6 +57,7 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
   "name": "wssensor",
   "port": 8080,
   "refresh": "60",
+  "storage": "fs",
   "leak": "10",
   "aliases": {
     "NODE-2BA0FF": "Porch Motion"

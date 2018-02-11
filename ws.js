@@ -57,6 +57,7 @@ function WsSensorPlatform(log, config, api) {
       "port": 4050
     };
     this.refresh = config['refresh'] || 60; // Update every minute
+    this.storage = config.storage || "fs";
   } else {
     this.log.error("config undefined or null!");
     return
@@ -121,8 +122,8 @@ function WsSensorPlatform(log, config, api) {
           this.log("No socket", k);
           this.accessories[k].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
             .updateValue(new Error("Not Responding"));
-//          this.accessories[k].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
-//            .updateValue(new Error("Not Responding"));
+          //          this.accessories[k].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
+          //            .updateValue(new Error("Not Responding"));
         }
 
       }
@@ -232,7 +233,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
       .setCharacteristic(Characteristic.Manufacturer, "WSSENSOR")
       .setCharacteristic(Characteristic.Model, accessoryDef.Model + " " + accessoryDef.Version)
       .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version)
-      .setCharacteristic(Characteristic.SerialNumber, hostname+"-"+name);
+      .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + name);
 
     var sensors = accessoryDef.Model.split('-');
 
@@ -258,7 +259,11 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
       }
     }
     newAccessory.log = this.log;
-    newAccessory.loggingService = new FakeGatoHistoryService("weather", newAccessory,4032,this.refresh * 10/60);
+    newAccessory.loggingService = new FakeGatoHistoryService("weather", newAccessory, {
+      storage: this.storage,
+      minutes: this.refresh * 10 / 60
+    });
+
     this.accessories[name] = newAccessory;
     this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
 
@@ -277,7 +282,10 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   this.accessories[name] = accessory;
 
   accessory.log = this.log;
-  accessory.loggingService = new FakeGatoHistoryService("weather", accessory,4032,this.refresh * 10/60);
+  accessory.loggingService = new FakeGatoHistoryService("weather", accessory, {
+    storage: this.storage,
+    minutes: this.refresh * 10 / 60
+  });
 
   this.log("configureAccessory", name);
 }
