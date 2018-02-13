@@ -1,3 +1,5 @@
+# homebridge-wssensor ESP8266 LUA Code
+
 LUA programs for a nodeMCU device to read various sensors and integrate into homebridge-mcuiot.  Sensors supported are DHT22 Temperature and Humidity Sensor, Bosch BME280 Temperatue, Humidty and Barometric and the YL-69 Soil Moisture Sensor.  Runs as a simple web server, that responds with sensor data formatted in JSON. Device discovery is done via MDNS, and advertises itself as a dht22 service.
 
 JSON Response looks like this
@@ -20,7 +22,13 @@ or for a BME280
    - 1K Resister
    - ( Transistor and Resister only needed for Soil Moisture Sensor )
 
-http://www.schematics.com/editor/nodemcu-dht22-yl-69-35878/
+# Circuit Diagrams
+
+## BME-MS
+
+![BME-MS](ESP8266%20-%20WSSensor_bb.jpg)
+
+![BME-MS](ESP8266%20-%20WSSensor_schem.jpg)
 
 # nodeMCU Firmware
 
