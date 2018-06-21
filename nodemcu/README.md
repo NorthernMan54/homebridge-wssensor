@@ -1,14 +1,6 @@
 # homebridge-wssensor ESP8266 LUA Code
 
-LUA programs for a nodeMCU device to read various sensors and integrate into homebridge-mcuiot.  Sensors supported are DHT22 Temperature and Humidity Sensor, Bosch BME280 Temperatue, Humidty and Barometric and the YL-69 Soil Moisture Sensor.  Runs as a simple web server, that responds with sensor data formatted in JSON. Device discovery is done via MDNS, and advertises itself as a dht22 service.
-
-JSON Response looks like this
-
-{ "Hostname": "NODE-871ED8", "Model": "DHT", "Version": "1.1", "Data": {"Temperature": 23.7, "Humidity": 51.8, "Moisture": 1, "Status": 0 }}
-
-or for a BME280
-
-{ "Hostname": "NODE-8689D", "Model": "BME", "Version": "1.2", "Data": {"Temperature": 22.97, "Humidity": 48.341, "Moisture": 8, "Status": 0, "Barometer": 1008.512, "Dew": 11.49 }}
+LUA programs for a nodeMCU device to read various sensors and integrate into homebridge-wssensor.  Supports direct notification and alerting of motion events from a PIR motion sensor.
 
 # Hardware
 
@@ -17,10 +9,7 @@ or for a BME280
    - dht22 Temperature / Humidity Sensor
 	Or
    - BME280 Bosch DIGITAL HUMIDITY, PRESSURE AND TEMPERATURE SENSOR
-   - YL-69 Soil Moisture Sensor
-   - 2N3904 Transistor
-   - 1K Resister
-   - ( Transistor and Resister only needed for Soil Moisture Sensor )
+   - PIR Monition Sensor ( https://www.aliexpress.com/item/Mini-IR-Pyroelectric-Infrared-PIR-Motion-Human-Sensor-Automatic-Detector-Module-high-reliability-12mm-x-25mm/32749737125.html?spm=a2g0s.9042311.0.0.6ec74c4dwcSLq4 )
 
 # Circuit Diagrams
 
@@ -48,12 +37,10 @@ or for a BME280
    module.SSID["SSID1"] = { ssid="SSID1", pwd = "password" }
    ```
 
-2. Model - Either DHT or DHT-YL, used by homebridge-mcuiot to determine if Moisture
+2. Model - Either DHT or BME, used by homebridge-wssensor to determine if Moisture
    sensor is included.
    ```
    module.Model = "DHT"
-   or
-   module.Model = "DHT-YL"
    or
    module.Model = "BME"
    ```
@@ -85,43 +72,4 @@ ESP8266 mode is: 1
 MAC address is: 5e:cf:7f:18:a6:b3
 IP is 192.168.1.146
 ====================================
-Registering service dht22 with mDNS
-Web Server Started
-```
-
-4. To test the device, I use curl on OSX ie
-```
-curl 192.168.1.146
-```
-And see the following via the serial console.
-
-```
-GET / HTTP/1.1
-Host: 192.168.1.146
-User-Agent: curl/7.43.0
-Accept: */*
-
-
-Status: 0
-Temp: 24.1
-Humi: 49.3
-Moisture: 1024
-```
-And curl outputs
-```
-{ "Hostname": "NODE-18A6B3", "Model": "DHT-YL", "Version": "1.0", "Data": {"Temperature": 24.3, "Humidity": 48.4, "Moisture": 1024, "Status": 0 }}
-```
-
-5. To test mDNS, I use this command on OSX
-```
-dns-sd -B _dht22._tcp
-```
-And for my 2 devices on the network, I receive the following output:
-```
-Browsing for _dht22._tcp
-DATE: ---Mon 19 Sep 2016---
-21:11:26.737  ...STARTING...
-Timestamp     A/R    Flags  if Domain               Service Type         Instance Name
-21:11:26.739  Add        3   4 local.               _dht22._tcp.         NODE-18A6B3
-21:11:26.739  Add        2   4 local.               _dht22._tcp.         NODE-871ED8
 ```

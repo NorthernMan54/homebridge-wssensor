@@ -17,7 +17,8 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 
 # Supported sensors
 
-* HC-SR501 Motion Sensor Module
+* HC-SR501 Motion Sensor Module ( This one generates alot of false positives )
+* I used this one, https://www.aliexpress.com/item/Mini-IR-Pyroelectric-Infrared-PIR-Motion-Human-Sensor-Automatic-Detector-Module-high-reliability-12mm-x-25mm/32749737125.html?spm=a2g0s.9042311.0.0.6ec74c4dwcSLq4
 
 # Backlog - Plugin
 
@@ -47,7 +48,9 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 
 # Installation - homebridge-wssensor
 
-# Installation - NodeMCU
+```
+sudo npm install -g homebridge-wssensor
+```
 
 # Configuration - homebridge-wssensor
 
@@ -55,7 +58,7 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 {
   "platform": "wssensor",
   "name": "wssensor",
-  "port": 8080,
+  "port": 4050,
   "refresh": "60",
   "storage": "fs",
   "leak": "10",
@@ -64,6 +67,12 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
   }
 }
 ```
+
+* `port`    - Listener port for sensor to send data to
+* `refresh` - Polling frequency, defaults to 60 seconds
+* `storage` - Storage of chart graphing data for history graphing, either fs or googleDrive, defaults to fs
+* `leak`    - Leak sensor alarm trigger percentage, defaults to 10%
+* `aliases` - Friendly names for your sensor's
 
 # Configuration - NodeMCU
 
