@@ -27,6 +27,8 @@ local GyroX = 0
 local GyroY = 0
 local GyroZ = 0
 
+local movementA, movementG, Temperature = 0,0,0
+
 function module.init()
   -- Initialize sensors
   print(i2c.setup(id, config.mpu6050sda, config.mpu6050scl, i2c.SLOW)) -- initialize i2c
@@ -104,7 +106,7 @@ function module.rawRead()
   AccelX = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 1), 8), string.byte(data, 2))))
   AccelY = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 3), 8), string.byte(data, 4))))
   AccelZ = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 5), 8), string.byte(data, 6))))
-  local Temperature = unsignTosigned16bit(bit.bor(bit.lshift(string.byte(data, 7), 8), string.byte(data, 8)))
+  Temperature = unsignTosigned16bit(bit.bor(bit.lshift(string.byte(data, 7), 8), string.byte(data, 8)))
   GyroX = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 9), 8), string.byte(data, 10))))
   GyroY = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 11), 8), string.byte(data, 12))))
   GyroZ = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 13), 8), string.byte(data, 14))))
@@ -117,9 +119,13 @@ function module.rawRead()
   GyroY = GyroY / GyroScaleFactor
   GyroZ = GyroZ / GyroScaleFactor
 
-  local movementA = _Round(_AccelX - AccelX) + _Round(_AccelY - AccelY) + _Round(_AccelZ - AccelZ)
-  local movementG = _Round(_GyroX - GyroX) + _Round(_GyroY - GyroY) + _Round(_GyroZ - GyroZ)
+  movementA = _Round(_AccelX - AccelX) + _Round(_AccelY - AccelY) + _Round(_AccelZ - AccelZ)
+  movementG = _Round(_GyroX - GyroX) + _Round(_GyroY - GyroY) + _Round(_GyroZ - GyroZ)
 
+  return movementA, movementG, Temperature
+end
+
+function module.cacheRead()
   return movementA, movementG, Temperature
 end
 
@@ -144,11 +150,11 @@ function module.read(trigger, interval)
 
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
-  "\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..accelstring.." }}\n"
+"\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..accelstring.." }}\n"
 
-  print(response)
+print(response)
 
-  return response
+return response
 end
 
 return module

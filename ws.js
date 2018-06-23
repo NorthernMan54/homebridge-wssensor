@@ -112,7 +112,6 @@ function WsSensorPlatform(log, config, api) {
     //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));
 
     setInterval(function() {
-      debug("Broadcasting");
       for (var k in this.accessories) {
 
         var ws = this.accessories[k].ws;

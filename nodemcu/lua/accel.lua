@@ -40,7 +40,7 @@ function module.start(wsserver)
           tm = tmr.now()
 
           print("Heap Available: -sensors  " .. node.heap() )
-          ws:send(mpu.read(value,interval), 1)
+          ws:send(mpu.read(value, interval), 1)
         else
           print( "Motion event not sent, no connection")
         end
@@ -51,37 +51,43 @@ function module.start(wsserver)
     last = value
   end
 
-  local movementA, movementG, Temperature = 0,0,0
+  local movementA, movementG, Temperature = 0, 0, 0
   local interval = tmr.time()
 
-  tmr.create():alarm(100, tmr.ALARM_SINGLE, function()
-    uart.write(0,".")
+  tmr.create():alarm(100, tmr.ALARM_AUTO, function()
+
     local trigger = false
     local status = nil
-    local _movementA, _movementG, _Temperature = mpu.rawRead()
-    if ( _movementA + _movementG > 0 )
+    if (tmr.time() - interval) > -1 -- Minimum event length is 1 second
     then
-      -- Movement
-      if ( movementA + movementG == 0 )
+      uart.write(0, "-")
+      local _movementA, _movementG, _Temperature = mpu.rawRead()
+      if ( _movementA + _movementG > 0 )
       then
-        trigger = true
-        status = true
+        -- Movement
+        if ( movementA + movementG == 0 )
+        then
+          trigger = true
+          status = true
+        end
+      else
+        -- Movement stopped
+        if ( movementA + movementG > 0 )
+        then
+          trigger = true
+          status = false
+        end
+      end
+      movementA = _movementA
+      movementG = _movementG
+
+      if ( trigger )
+      then
+        motionEvent(status, tmr.time() - interval)
+        interval = tmr.time()
       end
     else
-      -- Movement stopped
-      if ( movementA + movementG > 0 )
-      then
-        trigger = true
-        status = false
-      end
-    end
-    movementA = _movementA
-    movementG = _movementG
-
-    if ( trigger )
-    then
-      motionEvent(status, tmr.time()-interval)
-      interval = tmr.time()
+      uart.write(0, ".")
     end
   end)
 
