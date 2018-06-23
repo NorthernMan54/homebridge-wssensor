@@ -11,6 +11,8 @@ local function dump(o)
   end
 end
 
+local lua_mdns = nil
+
 local function hb_found(ws)
   print("WS Socket available http://"..ws.ipv4..":"..ws.port)
   lua_mdns = nil

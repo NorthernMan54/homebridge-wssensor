@@ -49,6 +49,22 @@ LUA programs for a nodeMCU device to read various sensors and integrate into hom
 
 1. Please use ESPlorer to install the lua files on the device.
 
+config.lua
+setup.lua
+test.lua
+passwords.lua
+led.lua
+lua-mdns.lua
+
+ACL / MPU6050
+
+accel.lua
+mpu6050.lua
+
+
+
+
+
 2. Reboot your device
 
 3. Output from boot via the serial console should look like this.

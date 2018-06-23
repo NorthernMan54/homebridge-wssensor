@@ -1,55 +1,3 @@
-local function dump(o)
-  if type(o) == 'table' then
-    local s = '{ '
-    for k, v in pairs(o) do
-      if type(k) ~= 'number' then k = '"'..k..'"' end
-      s = s .. '['..k..'] = ' .. dump(v) .. ','
-    end
-    return s .. '} '
-  else
-    return tostring(o)
-  end
-end
-
-local function hb_found(ws)
-  print("WS Socket available http://"..ws.ipv4..":"..ws.port)
-  lua_mdns = nil
-  print("Cancelling watch dog")
-  tmr.softwd(-1)
-  led.connected()
-
-  collectgarbage()
-  print("Heap Available: -pre motion  " .. node.heap() )
-
-  -- Load personaility module
-
-  if string.find(config.Model, "ACL") then
-    ms = require('accel')
-  end
-  if string.find(config.Model, "MS") then
-    ms = require('motion')
-  end
-
-  print("Heap Available: personaility  " .. node.heap() )
-  ms.start("ws://"..ws.ipv4..":"..ws.port)
-
-end
-
-local function wifi_ready()
-  print("\n====================================")
-  print("Name is:         "..config.ID)
-  print("ESP8266 mode is: " .. wifi.getmode())
-  print("MAC address is: " .. wifi.ap.getmac())
-  print("IP is "..wifi.sta.getip())
-  print("====================================")
-  setup=nil
-  wifi.eventmon.unregister(wifi.eventmon.STA_GOT_IP)
-
-  print("Heap Available: -mdns  " .. node.heap() ) -- 18720
-
-  led.mdns()
-  lua_mdns.mdns_query("_wssensor._tcp", hb_found)
-end
 
 -- Start of code
 tmr.softwd(60)
@@ -57,20 +5,39 @@ tmr.softwd(60)
 print("Heap Available:  " .. node.heap()) -- 38984
 config = require("config")
 print("Heap Available: config " .. node.heap()) -- 37248 1500
-passwords = require("passwords")
-print("Heap Available: passwords " .. node.heap()) -- 37248 1500
-led = require("led")
-print("Heap Available: led " .. node.heap()) -- 34200 3000
-if string.find(config.Model, "BME") then
-  bme = require("bme")
-  print("Heap Available: bme" .. node.heap()) -- 34504    0
-end
+mpu = require("mpu6050")
+print("Heap Available: mpu6050 " .. node.heap()) -- 37248 1500
+mpu.init()
 
-local setup = require("setup")
-collectgarbage()
-print("Heap Available: setup " .. node.heap()) -- 23280 4000
+local movementA, movementG, Temperature = 0,0,0
+local interval = tmr.time()
 
-lua_mdns = require("lua-mdns")
-print("Heap Available: mdns " .. node.heap()) -- 24144
-led.boot()
-setup.start(wifi_ready)
+tmr.create():alarm(100, tmr.ALARM_AUTO, function()
+  local trigger = false
+  local status = nil
+  local _movementA, _movementG, _Temperature = mpu.rawRead()
+  if ( _movementA + _movementG > 0 )
+  then
+    -- Movement
+    if ( movementA + movementG == 0 )
+    then
+      trigger = true
+      status = true
+    end
+  else
+    -- Movement stopped
+    if ( movementA + movementG > 0 )
+    then
+      trigger = true
+      status = false
+    end
+  end
+  movementA = _movementA
+  movementG = _movementG
+
+  if ( trigger )
+  then
+    mpu.read(status, tmr.time()-interval)
+    interval = tmr.time()
+  end
+end)

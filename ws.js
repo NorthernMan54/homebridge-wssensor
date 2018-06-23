@@ -25,6 +25,7 @@ var hostname = os.hostname();
 
 var Accessory, Service, Characteristic, UUIDGen, CustomCharacteristic, FakeGatoHistoryService;
 var cachedAccessories = 0;
+var count = 0;
 
 var platform_name = "wssensor";
 var plugin_name = "homebridge-" + platform_name;
@@ -117,7 +118,9 @@ function WsSensorPlatform(log, config, api) {
         var ws = this.accessories[k].ws;
         debug("Poll", k);
         if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send("1");
+          count++;
+          ws.send(count.toString());
+          debug(count);
         } else {
           this.log("No socket", k);
           this.accessories[k].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
@@ -149,6 +152,13 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
       switch (k) {
         case "Motion":
           var value = message.Data[k] > 0;
+          this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
+            .updateValue(value);
+          break;
+
+        case "Trigger":
+          var value = (message.Data[k] ? 1 : 0);
+          debug("Trigger", value);
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
             .updateValue(value);
           break;
@@ -256,6 +266,17 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
             .getService(Service.TemperatureSensor)
             .addCharacteristic(CustomCharacteristic.AtmosphericPressureLevel);
           break;
+        case "ACL":
+          newAccessory.addService(Service.MotionSensor, displayName);
+          newAccessory.addService(Service.TemperatureSensor, displayName)
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .setProps({
+              minValue: -100,
+              maxValue: 100
+            });
+          break;
+        default:
+          this.log.error("Unknown Sensor Type", sensors[i], name, displayName);
       }
     }
     newAccessory.log = this.log;
