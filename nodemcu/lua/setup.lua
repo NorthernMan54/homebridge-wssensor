@@ -6,6 +6,7 @@ local function wifi_reboot()
 end
 
 local function wifi_start(list_aps)
+  local passwords = require("passwords")
   if list_aps then
     local found = 0
     for key,value in pairs(list_aps) do

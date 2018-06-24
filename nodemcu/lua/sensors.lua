@@ -32,7 +32,6 @@ function module.read(motion, motionStatus, current)
     ", \"Humidity\": "..humi..", \"Moisture\": "..moist_value..
     ", \"Status\": "..status..", \"Barometer\": "..baro..", \"Dew\": "..dew
     filler = ","
-    bme = nil
   end
   if string.find(config.Model, "DHT") then
     status, temp, humi, temp_dec, humi_dec = dht.read(config.DHT22)

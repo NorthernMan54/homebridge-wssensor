@@ -46,14 +46,8 @@ tmr.softwd(60)
 print("Heap Available:  " .. node.heap()) -- 38984
 config = require("config")
 print("Heap Available: config " .. node.heap()) -- 37248 1500
-passwords = require("passwords")
-print("Heap Available: passwords " .. node.heap()) -- 37248 1500
 led = require("led")
 print("Heap Available: led " .. node.heap()) -- 34200 3000
-if string.find(config.Model, "BME") then
-  bme = require("bme")
-  print("Heap Available: bme" .. node.heap()) -- 34504    0
-end
 
 local setup = require("setup")
 collectgarbage()
