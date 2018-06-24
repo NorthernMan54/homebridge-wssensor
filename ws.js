@@ -152,6 +152,10 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
           var value = message.Data[k] > 0;
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
             .updateValue(value);
+          this.accessories[name].mLoggingService.addEntry({
+            time: moment().unix(),
+            status: value
+          });
           break;
 
         case "Trigger":
@@ -159,6 +163,10 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
           debug("Trigger", value);
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
             .updateValue(value);
+          this.accessories[name].mLoggingService.addEntry({
+            time: moment().unix(),
+            status: value
+          });
           break;
 
         case "Temperature":
@@ -205,12 +213,12 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
       }
     }
 
-    this.accessories[name].loggingService.addEntry({
-      time: moment().unix(),
-      temp: roundInt(message.Data.Temperature),
-      pressure: roundInt(message.Data.Barometer),
-      humidity: roundInt(message.Data.Humidity)
-    });
+  //  this.accessories[name].wLoggingService.addEntry({
+  //    time: moment().unix(),
+  //    temp: roundInt(message.Data.Temperature),
+  //    pressure: roundInt(message.Data.Barometer),
+  //    humidity: roundInt(message.Data.Humidity)
+  //  });
 
   }
 }
@@ -249,6 +257,15 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
       switch (sensors[i]) {
         case "MS":
           newAccessory.addService(Service.MotionSensor, displayName);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Sensitivity);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.LastActivation);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Duration);
           break;
         case "BME":
           newAccessory.addService(Service.TemperatureSensor, displayName)
@@ -266,6 +283,15 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           break;
         case "ACL":
           newAccessory.addService(Service.MotionSensor, displayName);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Sensitivity);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Duration);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.LastActivation);
           newAccessory.addService(Service.TemperatureSensor, displayName)
             .getCharacteristic(Characteristic.CurrentTemperature)
             .setProps({
@@ -278,10 +304,15 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
       }
     }
     newAccessory.log = this.log;
-    newAccessory.loggingService = new FakeGatoHistoryService("weather", newAccessory, {
+    newAccessory.mLoggingService = new FakeGatoHistoryService("motion", newAccessory, {
       storage: this.storage,
       minutes: this.refresh * 10 / 60
     });
+
+//    newAccessory.wLoggingService = new FakeGatoHistoryService("weather", newAccessory, {
+//      storage: this.storage,
+//      minutes: this.refresh * 10 / 60
+//    });
 
     this.accessories[name] = newAccessory;
     this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
@@ -301,10 +332,15 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   this.accessories[name] = accessory;
 
   accessory.log = this.log;
-  accessory.loggingService = new FakeGatoHistoryService("weather", accessory, {
+  accessory.mLoggingService = new FakeGatoHistoryService("motion", accessory, {
     storage: this.storage,
     minutes: this.refresh * 10 / 60
   });
+
+//  accessory.wLoggingService = new FakeGatoHistoryService("weather", accessory, {
+//    storage: this.storage,
+//    minutes: this.refresh * 10 / 60
+//  });
 
   this.log("configureAccessory", name);
 }
