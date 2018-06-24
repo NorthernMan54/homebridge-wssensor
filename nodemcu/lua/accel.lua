@@ -25,9 +25,7 @@ function module.start(wsserver)
     connected = false;
     -- Reboot if connection lost
     node.restart()
-
   end)
-
 
   function motionEvent(value, interval)
     -- Ignore sensor for 10 seconds
@@ -53,12 +51,10 @@ function module.start(wsserver)
 
   tmr.create():alarm(500, tmr.ALARM_AUTO, function()
 
-    --print("Time",tmr.now())
     local trigger = false
     local status = nil
     if (tmr.time() - interval) > 1 -- Minimum event length is 1 second
     then
-      --uart.write(0, "-")
       local _movementA, _movementG, _Temperature = mpu.rawRead()
       if ( _movementA + _movementG > 0 )
       then
@@ -85,10 +81,8 @@ function module.start(wsserver)
         interval = tmr.time()
       end
     else
-      --uart.write(0, ".")
     end
   end)
-
 
   print("Acceleration Sensor Enabled")
 end

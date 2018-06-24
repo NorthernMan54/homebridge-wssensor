@@ -4,9 +4,6 @@ local id = 0 -- always 0
 
 local MPU6050SlaveAddress = 0x68
 
-local AccelScaleFactor = 1; -- sensitivity scale factor respective to full scale setting provided in datasheet
-local GyroScaleFactor = 1;
-
 local MPU6050_REGISTER_SMPLRT_DIV = 0x19
 local MPU6050_REGISTER_USER_CTRL = 0x6A
 local MPU6050_REGISTER_PWR_MGMT_1 = 0x6B
@@ -93,9 +90,7 @@ end
 
 function module.rawRead()
 
-  local now = tmr.now()
   local data = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_XOUT_H, 14)
-  --print("Time",tmr.now()-now)
 
   local _AccelX = AccelX
   local _AccelY = AccelY
@@ -112,25 +107,10 @@ function module.rawRead()
   GyroY = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 11), 8), string.byte(data, 12))))
   GyroZ = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 13), 8), string.byte(data, 14))))
 
-  --AccelX=bit.lshift(string.byte(data, 1), 8) + string.byte(data, 2)
-  --AccelY=bit.lshift(string.byte(data, 3), 8) + string.byte(data, 4)
-  --AccelZ=bit.lshift(string.byte(data, 5), 8) + string.byte(data, 6)
-  --GyroX=bit.lshift(string.byte(data, 9), 8) + string.byte(data, 10)
-  --GyroY=bit.lshift(string.byte(data, 11), 8) + string.byte(data, 12)
-  --GyroZ=bit.lshift(string.byte(data, 13), 8) + string.byte(data, 14)
-  --print("Time-0",tmr.now()-now)
-
-  --AccelX = AccelX / AccelScaleFactor -- divide each with their sensitivity scale factor
-  --AccelY = AccelY / AccelScaleFactor
-  --AccelZ = AccelZ / AccelScaleFactor
   Temperature = math.floor((Temperature / 340 + 36.53) * 10 + .5) / 10-- temperature formula
-  --GyroX = GyroX / GyroScaleFactor
-  --GyroY = GyroY / GyroScaleFactor
-  --GyroZ = GyroZ / GyroScaleFactor
 
   movementA = _Round(_AccelX - AccelX) + _Round(_AccelY - AccelY) + _Round(_AccelZ - AccelZ)
   movementG = _Round(_GyroX - GyroX) + _Round(_GyroY - GyroY) + _Round(_GyroZ - GyroZ)
-
 
   return movementA, movementG, Temperature
 end
