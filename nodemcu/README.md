@@ -6,10 +6,13 @@ LUA programs for a nodeMCU device to read various sensors and integrate into hom
 
 1. Bill of materials
    - nodeMCU / esp8266 dev kit
-   - dht22 Temperature / Humidity Sensor
-	Or
+
+Sensor options
+
+   - DHT22 Temperature / Humidity Sensor
    - BME280 Bosch DIGITAL HUMIDITY, PRESSURE AND TEMPERATURE SENSOR
-   - PIR Monition Sensor ( https://www.aliexpress.com/item/Mini-IR-Pyroelectric-Infrared-PIR-Motion-Human-Sensor-Automatic-Detector-Module-high-reliability-12mm-x-25mm/32749737125.html?spm=a2g0s.9042311.0.0.6ec74c4dwcSLq4 )
+   - AM312 PIR Monition Sensor  ( https://www.aliexpress.com/item/Mini-IR-Pyroelectric-Infrared-PIR-Motion-Human-Sensor-Automatic-Detector-Module-high-reliability-12mm-x-25mm/32749737125.html?spm=a2g0s.9042311.0.0.6ec74c4dwcSLq4 )
+   - MPU 6050 Acceleration/gyroscope sensor aka GY-521 Breakout board
 
 # Circuit Diagrams
 
@@ -18,6 +21,16 @@ LUA programs for a nodeMCU device to read various sensors and integrate into hom
 ![BME-MS](ESP8266%20-%20WSSensor_bb.jpg)
 
 ![BME-MS](ESP8266%20-%20WSSensor_schem.jpg)
+
+## AM312
+
+Pinout
+
+```
+-- Gnd
+-- Signal
+-- VCC +5v
+```
 
 # nodeMCU Firmware
 
@@ -65,29 +78,13 @@ mpu6050.lua
 
 * BME-MS module please also include
 
+bme.lua
+motion.lua
+sensors.lua
+
+
 2. Compile all lua files to lc files using ESPlorer
 
-3. Reboot your device
+3. Test your device by running test.lua
 
-4. Output from boot via the serial console should look like this.
-
-```
-NodeMCU custom build by frightanic.com
-	branch: master
-	commit: cdaf6344457ae427d8c06ac28a645047f9e0f588
-	SSL: false
-	modules: adc,am2320,bit,dht,file,gpio,mdns,net,node,tmr,uart,wifi
- build 	built on: 2016-06-27 22:58
- powered by Lua 5.1.4 on SDK 1.5.1(e67da894)
-Booting...
-Setting Init Timer
-Configuring Wifi ...
-> Connecting to XXXXXXX ...
-IP unavailable, Waiting...
-
-====================================
-ESP8266 mode is: 1
-MAC address is: 5e:cf:7f:18:a6:b3
-IP is 192.168.1.146
-====================================
-```
+4. After you have completed testing, rename test.lua to init.lua
