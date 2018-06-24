@@ -37,12 +37,14 @@ LUA programs for a nodeMCU device to read various sensors and integrate into hom
    module.SSID["SSID1"] = { ssid="SSID1", pwd = "password" }
    ```
 
-2. Model - Either DHT or BME, used by homebridge-wssensor to determine if Moisture
-   sensor is included.
+2. Model - Either DHT-MS,  BME-MS, or ACL used by homebridge-wssensor to determine which sensor type to create in homebridge
+
    ```
-   module.Model = "DHT"
+   module.Model = "DHT-MS"
    or
-   module.Model = "BME"
+   module.Model = "BME-MS"
+   or
+   module.Model = "ACL"
    ```
 
 # Lua Program installation
@@ -56,18 +58,18 @@ passwords.lua
 led.lua
 lua-mdns.lua
 
-ACL / MPU6050
+* ACL / MPU6050 module please also include
 
 accel.lua
 mpu6050.lua
 
+* BME-MS module please also include
 
+2. Compile all lua files to lc files using ESPlorer
 
+3. Reboot your device
 
-
-2. Reboot your device
-
-3. Output from boot via the serial console should look like this.
+4. Output from boot via the serial console should look like this.
 
 ```
 NodeMCU custom build by frightanic.com

@@ -31,8 +31,7 @@ local movementA, movementG, Temperature = 0,0,0
 
 function module.init()
   -- Initialize sensors
-  print(i2c.setup(id, config.mpu6050sda, config.mpu6050scl, i2c.SLOW)) -- initialize i2c
-  print(id, config.mpu6050sda, config.mpu6050scl, i2c.SLOW)
+  i2c.setup(id, config.mpu6050sda, config.mpu6050scl, i2c.SLOW) -- initialize i2c
   MPU6050_Init()
 
 end
@@ -83,7 +82,7 @@ function MPU6050_Init() --configure MPU6050
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_GYRO_CONFIG, 0x00)-- set +/-250 degree/second full scale
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_CONFIG, 0x00)-- set +/- 2g full scale
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_FIFO_EN, 0x00)
-  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_INT_ENABLE, 0x01)
+  I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_INT_ENABLE, 0x00)
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_SIGNAL_PATH_RESET, 0x00)
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_USER_CTRL, 0x00)
 end
@@ -94,7 +93,9 @@ end
 
 function module.rawRead()
 
+  local now = tmr.now()
   local data = I2C_Read(MPU6050SlaveAddress, MPU6050_REGISTER_ACCEL_XOUT_H, 14)
+  --print("Time",tmr.now()-now)
 
   local _AccelX = AccelX
   local _AccelY = AccelY
@@ -111,16 +112,25 @@ function module.rawRead()
   GyroY = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 11), 8), string.byte(data, 12))))
   GyroZ = unsignTosigned16bit((bit.bor(bit.lshift(string.byte(data, 13), 8), string.byte(data, 14))))
 
-  AccelX = AccelX / AccelScaleFactor -- divide each with their sensitivity scale factor
-  AccelY = AccelY / AccelScaleFactor
-  AccelZ = AccelZ / AccelScaleFactor
+  --AccelX=bit.lshift(string.byte(data, 1), 8) + string.byte(data, 2)
+  --AccelY=bit.lshift(string.byte(data, 3), 8) + string.byte(data, 4)
+  --AccelZ=bit.lshift(string.byte(data, 5), 8) + string.byte(data, 6)
+  --GyroX=bit.lshift(string.byte(data, 9), 8) + string.byte(data, 10)
+  --GyroY=bit.lshift(string.byte(data, 11), 8) + string.byte(data, 12)
+  --GyroZ=bit.lshift(string.byte(data, 13), 8) + string.byte(data, 14)
+  --print("Time-0",tmr.now()-now)
+
+  --AccelX = AccelX / AccelScaleFactor -- divide each with their sensitivity scale factor
+  --AccelY = AccelY / AccelScaleFactor
+  --AccelZ = AccelZ / AccelScaleFactor
   Temperature = math.floor((Temperature / 340 + 36.53) * 10 + .5) / 10-- temperature formula
-  GyroX = GyroX / GyroScaleFactor
-  GyroY = GyroY / GyroScaleFactor
-  GyroZ = GyroZ / GyroScaleFactor
+  --GyroX = GyroX / GyroScaleFactor
+  --GyroY = GyroY / GyroScaleFactor
+  --GyroZ = GyroZ / GyroScaleFactor
 
   movementA = _Round(_AccelX - AccelX) + _Round(_AccelY - AccelY) + _Round(_AccelZ - AccelZ)
   movementG = _Round(_GyroX - GyroX) + _Round(_GyroY - GyroY) + _Round(_GyroZ - GyroZ)
+
 
   return movementA, movementG, Temperature
 end
@@ -152,7 +162,7 @@ function module.read(trigger, interval)
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
 "\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..accelstring.." }}\n"
 
-print(response)
+--print(response)
 
 return response
 end

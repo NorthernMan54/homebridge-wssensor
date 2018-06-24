@@ -106,7 +106,6 @@ function WsSensorPlatform(log, config, api) {
       debug("Number of cached Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
 
-      //      this.Websocket.updateParams(params);
 
     }.bind(this));
     //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));

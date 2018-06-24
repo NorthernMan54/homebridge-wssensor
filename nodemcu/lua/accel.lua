@@ -30,8 +30,8 @@ function module.start(wsserver)
 
 
   function motionEvent(value, interval)
-    -- Ignore sensor for first minute
-    if tmr.time() > 1 then
+    -- Ignore sensor for 10 seconds
+    if tmr.time() > 10 then
       if value == last then
         print("Motion Event - False")
       else
@@ -43,7 +43,7 @@ function module.start(wsserver)
         end
       end
     else
-      print( "Motion Event - Ignored, sensor warming up")
+      print( "\nMotion Event - Ignored, sensor warming up")
     end
     last = value
   end
@@ -51,13 +51,14 @@ function module.start(wsserver)
   local movementA, movementG, Temperature = 0, 0, 0
   local interval = tmr.time()
 
-  tmr.create():alarm(100, tmr.ALARM_AUTO, function()
+  tmr.create():alarm(500, tmr.ALARM_AUTO, function()
 
+    --print("Time",tmr.now())
     local trigger = false
     local status = nil
     if (tmr.time() - interval) > 1 -- Minimum event length is 1 second
     then
-      uart.write(0, "-")
+      --uart.write(0, "-")
       local _movementA, _movementG, _Temperature = mpu.rawRead()
       if ( _movementA + _movementG > 0 )
       then
@@ -84,7 +85,7 @@ function module.start(wsserver)
         interval = tmr.time()
       end
     else
-      uart.write(0, ".")
+      --uart.write(0, ".")
     end
   end)
 
