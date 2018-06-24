@@ -40,7 +40,7 @@ local function wifi_ready()
   lua_mdns.mdns_query("_wssensor._tcp", hb_found)
 end
 
--- Start of code
+-- Start of code, reboot if not connected within 60 seconds
 tmr.softwd(60)
 
 print("Heap Available:  " .. node.heap()) -- 38984

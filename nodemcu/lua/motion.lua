@@ -25,6 +25,7 @@ function module.start(wsserver)
     print('got message:', msg, opcode) -- opcode is 1 for text message, 2 for binary
     local sensors = require('sensors')
     sck:send(sensors.read(readSensor()), 1)
+    tmr.softwd(600)
   end)
   ws:on("close", function(_, status)
     print('connection closed', status)
@@ -37,9 +38,8 @@ function module.start(wsserver)
 
   function motionEvent(value)
 
-    print("Heap Available: event  " .. node.heap() )
-    -- Ignore sensor for first minute
-    if tmr.time() > 1 then
+    -- Ignore sensor for 10 seconds
+    if tmr.time() > 10 then
       if value == last then
         print("Motion Event - False")
       else
@@ -47,7 +47,6 @@ function module.start(wsserver)
           print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
           tm = tmr.now()
           local sensors = require('sensors')
-          print("Heap Available: -sensors  " .. node.heap() )
           ws:send(sensors.read(value,0), 1)
         else
           print( "Motion event not sent, no connection")

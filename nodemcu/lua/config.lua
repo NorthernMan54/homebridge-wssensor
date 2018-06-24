@@ -1,7 +1,7 @@
 local module = {}
 
 -- Options are DHT or DHT-YL, used by homebridge to determine if moisture data is valid.
-module.Model = "ACL"
+module.Model = "BME-MS"
 module.Version = "2.1"
 
 module.ID = wifi.sta.gethostname()
@@ -23,7 +23,7 @@ module.DHT22 = 2 -- D2
 module.YL69 = 0 -- adc pin 0
 module.YL69P = 7 -- 5 with DHT and 7 with BME
 
-module.SC501 = 5 -- AM312 Motion Sensor
+module.SC501 = 2 -- AM312 Motion Sensor
 module.SW420 = 2 -- SW-420 Vibration Sensor
 
 -- Hardware Timers

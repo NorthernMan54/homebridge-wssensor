@@ -70,7 +70,7 @@ function module.read(motion, motionStatus, current)
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
   "\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..tempstring..""
 ..gdstring..""..motionstring..""..currentstring.." }}\n"
-print(response)
+--print(response)
 
 return response
 end
