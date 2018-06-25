@@ -92,7 +92,7 @@ end
 
 function module.sensitivity(data)
   sensitivity = data
-  print(sensitivity)
+  --print("Sensitivity",sensitivity)
 end
 
 function module.rawRead()
