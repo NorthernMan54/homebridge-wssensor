@@ -24,6 +24,8 @@ local GyroX = 0
 local GyroY = 0
 local GyroZ = 0
 
+local sensitivity = 300
+
 local movementA, movementG, Temperature = 0,0,0
 
 function module.init()
@@ -85,7 +87,12 @@ function MPU6050_Init() --configure MPU6050
 end
 
 function _Round(X)
-  return math.floor(math.abs(X / 300))
+  return math.floor(math.abs(X / sensitivity))
+end
+
+function module.sensitivity(data)
+  sensitivity = data
+  print(sensitivity)
 end
 
 function module.rawRead()

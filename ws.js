@@ -114,11 +114,12 @@ function WsSensorPlatform(log, config, api) {
       for (var k in this.accessories) {
 
         var ws = this.accessories[k].ws;
-        debug("Poll", k);
+        debug("Poll", k, count);
         if (ws && ws.readyState === WebSocket.OPEN) {
           count++;
-          ws.send(count.toString());
-          debug(count);
+          ws.send({
+            "count": count.toString()
+          });
         } else {
           this.log("No socket", k);
           this.accessories[k].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)

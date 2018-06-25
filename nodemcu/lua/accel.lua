@@ -17,7 +17,14 @@ function module.start(wsserver)
   end)
   ws:on("receive", function(sck, msg, opcode)
     print('\ngot message:', msg, opcode) -- opcode is 1 for text message, 2 for binary
+    local json = require('json')
+    local result = json.parse(msg)
+    print('\ngot message:', result["count"], result["sensitivity"], opcode) -- opcode is 1 for text message, 2 for binary
     sck:send(mpu.read(), 1)
+    if ( result["sensitivity"] ~= nil )
+    then
+      mpu.sensitivity(result["sensitivity"])
+    end
     tmr.softwd(600)
   end)
   ws:on("close", function(_, status)
