@@ -1,5 +1,3 @@
-local lua_mdns = nil
-
 local function hb_found(ws)
   print("WS Socket available http://"..ws.ipv4..":"..ws.port)
   lua_mdns = nil
@@ -37,6 +35,7 @@ local function wifi_ready()
   print("Heap Available: -mdns  " .. node.heap() ) -- 18720
 
   led.mdns()
+  local lua_mdns = require("lua-mdns")
   lua_mdns.mdns_query("_wssensor._tcp", hb_found)
 end
 
@@ -53,7 +52,5 @@ local setup = require("setup")
 collectgarbage()
 print("Heap Available: setup " .. node.heap()) -- 23280 4000
 
-lua_mdns = require("lua-mdns")
-print("Heap Available: mdns " .. node.heap()) -- 24144
 led.boot()
 setup.start(wifi_ready)

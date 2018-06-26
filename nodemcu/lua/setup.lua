@@ -1,10 +1,5 @@
 local module = {}
 
-local function wifi_reboot()
-  print("REBOOT....")
-  node.restart()
-end
-
 local function wifi_start(list_aps)
   local passwords = require("passwords")
   if list_aps then
