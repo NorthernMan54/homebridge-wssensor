@@ -2,6 +2,7 @@ local module = {}
 
 local mpu = require('mpu6050')
 local ws
+local duration = 5  -- minumum length of trigger event is 5 sec
 
 function module.start(wsserver)
   local tm = tmr.now()
@@ -35,7 +36,7 @@ function module.start(wsserver)
   end)
 
   function motionEvent(value, interval)
-    -- Ignore sensor for 10 seconds
+    -- Ignore sensor for first 30 seconds
     if tmr.time() > 30 then
       if value == last then
         print("Motion Event - False")
@@ -60,8 +61,8 @@ function module.start(wsserver)
 
     local trigger = false
     local status = nil
-    if (tmr.time() - interval) > 1 -- Minimum event length is 1 second
-    then
+    --if (tmr.time() - interval) > 1 -- Minimum event length is 1 second
+    --then
       local _movementA, _movementG, _Temperature = mpu.rawRead()
       if ( _movementA + _movementG > 0 )
       then
@@ -87,8 +88,8 @@ function module.start(wsserver)
         motionEvent(status, tmr.time() - interval)
         interval = tmr.time()
       end
-    else
-    end
+    --else
+    --end
   end)
 
   print("Acceleration Sensor Enabled")
