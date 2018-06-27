@@ -68,7 +68,7 @@ function module.flashRed()
   if config.ledState == 0 or config.ledState == 2 then
     return
   end
-  
+
   gpio.write(config.ledRed, gpio.LOW)
   tmr.alarm(1,200,tmr.ALARM_SINGLE,function()
       gpio.write(config.ledRed, gpio.HIGH)
