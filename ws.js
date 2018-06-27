@@ -59,6 +59,9 @@ function WsSensorPlatform(log, config, api) {
     };
     this.refresh = config['refresh'] || 60; // Update every minute
     this.storage = config.storage || "fs";
+    this.duration = config['duration'] || 10; // Duration of on event in seconds ( ACL )
+    this.sensitivity = config['sensitivity'] || 400; // Sensitivity of sensor ( ACL )
+
   } else {
     this.log.error("config undefined or null!");
     return
@@ -118,7 +121,9 @@ function WsSensorPlatform(log, config, api) {
         if (ws && ws.readyState === WebSocket.OPEN) {
           count++;
           var msg = {
-            "count": count, "sensitivity":400 
+            "count": count,
+            "sensitivity": this.sensitivity,
+            "duration": this.duration
           }
           ws.send(JSON.stringify(msg, null, 2));
         } else {
@@ -231,6 +236,18 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
   }
 }
 
+WsSensorPlatform.prototype.setDuration = function(value, callback) {
+  debug("setDuration");
+  this.duration = value;
+  callback();
+}
+
+WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
+
+  debug("setSensitivity");
+  this.sensitivity = value;
+  callback();
+}
 
 WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
@@ -270,10 +287,18 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
             .addCharacteristic(CustomCharacteristic.Sensitivity);
           newAccessory
             .getService(Service.MotionSensor)
+            .getCharacteristic(CustomCharacteristic.Sensitivity)
+            .on('set', this.setSensitivity.bind(this));
+          newAccessory
+            .getService(Service.MotionSensor)
             .addCharacteristic(CustomCharacteristic.LastActivation);
           newAccessory
             .getService(Service.MotionSensor)
             .addCharacteristic(CustomCharacteristic.Duration);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .getCharacteristic(CustomCharacteristic.Duration)
+            .on('set', this.setDuration.bind(this));
           break;
         case "BME":
           newAccessory.addService(Service.TemperatureSensor, displayName)
