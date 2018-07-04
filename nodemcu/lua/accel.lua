@@ -55,14 +55,15 @@ function module.start(wsserver)
             offTimer:stop()
             ws:send(mpu.read(value, interval), 1)
           else
-            if onStart < tmr.time() then
+            local length = (onStart - tmr.time() ) * 1000
+            if length < 999 then
               -- Duration has past
               print("Send Immediate off", tmr.time(), onStart)
               ws:send(mpu.read(value, interval), 1)
             else
               -- Need to wait for duration to pass before sending off
               print("Start Delayed Off", (onStart - tmr.time() ), tmr.time())
-              offTimer:alarm((onStart - tmr.time() ) * 1000, tmr.ALARM_SINGLE, function()
+              offTimer:alarm(length, tmr.ALARM_SINGLE, function()
                 print("Sent delayed off", tmr.time())
                 ws:send(mpu.read(value, interval), 1)
               end)
