@@ -1,23 +1,16 @@
 local module = {}
+
+local mpu = require('mpu6050')
 local ws
 local duration = 5 -- minumum length of trigger event is 10 sec
 local onStart
 local offTimer = tmr.create()
 
-local function readSensor()
-  local motion = gpio.read(config.SC501)
-  local motionStatus = 0
-  if tmr.time() < 1 then
-    motionStatus = 1
-  end
-  return motion, motionStatus
-end
-
 function module.start(wsserver)
-  gpio.mode(config.SC501, gpio.INT)
   local tm = tmr.now()
   local last = 0
-  local connected = false;
+  local connected = false
+  mpu.init()
 
   ws = websocket.createClient()
   ws:connect(wsserver)
@@ -26,20 +19,19 @@ function module.start(wsserver)
     connected = true;
   end)
   ws:on("receive", function(sck, msg, opcode)
+    --print('\ngot message:', msg, opcode) -- opcode is 1 for text message, 2 for binary
     local json = require('json')
     local result = json.parse(msg)
     print('\ngot message:', result["count"], result["sensitivity"], opcode) -- opcode is 1 for text message, 2 for binary
-    local sensors = require('sensors')
-    sck:send(sensors.read(readSensor()), 1)
+    sck:send(mpu.read(), 1)
     if ( result["sensitivity"] ~= nil )
     then
-      --mpu.sensitivity(result["sensitivity"])
+      mpu.sensitivity(result["sensitivity"])
     end
     if ( result["duration"] ~= nil )
     then
       duration = result["duration"]
     end
-
     tmr.softwd(600)
   end)
   ws:on("close", function(_, status)
@@ -47,39 +39,33 @@ function module.start(wsserver)
     connected = false;
     -- Reboot if connection lost
     node.restart()
-
   end)
 
-  function motionEvent(value)
-    -- Ignore sensor for 10 seconds
+  function motionEvent(value, interval)
+    -- Ignore sensor for first 30 seconds
     if tmr.time() > 30 then
       if value == last then
         print("Motion Event - False")
       else
         if connected == true then
-          print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
-          if value == 1 then
+          print("\nMotion Event", value, interval)
+          if value then
             onStart = tmr.time() + duration
             print("Time", tmr.time(), onStart)
             offTimer:stop()
-            tm = tmr.now()
-            local sensors = require('sensors')
-            ws:send(sensors.read(value, 0), 1)
+            ws:send(mpu.read(value, interval), 1)
           else
-            if onStart < tmr.time() then
+            local length = (onStart - tmr.time() ) * 1000
+            if length < 999 then
               -- Duration has past
               print("Send Immediate off", tmr.time(), onStart)
-              tm = tmr.now()
-              local sensors = require('sensors')
-              ws:send(sensors.read(value, 0), 1)
+              ws:send(mpu.read(value, interval), 1)
             else
               -- Need to wait for duration to pass before sending off
               print("Start Delayed Off", (onStart - tmr.time() ), tmr.time())
-              offTimer:alarm((onStart - tmr.time() ) * 1000, tmr.ALARM_SINGLE, function()
+              offTimer:alarm(length, tmr.ALARM_SINGLE, function()
                 print("Sent delayed off", tmr.time())
-                tm = tmr.now()
-                local sensors = require('sensors')
-                ws:send(sensors.read(value, 0), 1)
+                ws:send(mpu.read(value, interval), 1)
               end)
             end
           end
@@ -88,13 +74,31 @@ function module.start(wsserver)
         end
       end
     else
-      print( "Motion Event - Ignored, sensor warming up")
+      print( "\nMotion Event - Ignored, sensor warming up")
     end
     last = value
   end
 
-  gpio.trig(config.SC501, "both", motionEvent)
-  print("Motion Sensor Enabled")
+  local movementA, movementG, Temperature = 0, 0, 0
+  local interval = tmr.time()
+
+  tmr.create():alarm(500, tmr.ALARM_AUTO, function()
+
+    local movementA, movementG, trigger, status, Temperature = mpu.rawRead()
+
+    if ( trigger )
+    then
+      motionEvent(status, tmr.time() - interval)
+      interval = tmr.time()
+      if status then
+        led.flashRed()
+      end
+    end
+    --else
+    --end
+  end)
+
+  print("Acceleration Sensor Enabled")
 end
 
 return module

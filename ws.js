@@ -25,6 +25,7 @@ var hostname = os.hostname();
 
 var Accessory, Service, Characteristic, UUIDGen, CustomCharacteristic, FakeGatoHistoryService;
 var cachedAccessories = 0;
+var count = 0;
 
 var platform_name = "wssensor";
 var plugin_name = "homebridge-" + platform_name;
@@ -58,6 +59,9 @@ function WsSensorPlatform(log, config, api) {
     };
     this.refresh = config['refresh'] || 60; // Update every minute
     this.storage = config.storage || "fs";
+    this.duration = config['duration'] || 10; // Duration of on event in seconds ( ACL )
+    this.sensitivity = config['sensitivity'] || 400; // Sensitivity of sensor ( ACL )
+
   } else {
     this.log.error("config undefined or null!");
     return
@@ -105,19 +109,23 @@ function WsSensorPlatform(log, config, api) {
       debug("Number of cached Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
 
-      //      this.Websocket.updateParams(params);
 
     }.bind(this));
     //debug("WsSensorPlatform %s", JSON.stringify(this.accessories));
 
     setInterval(function() {
-      debug("Broadcasting");
       for (var k in this.accessories) {
 
         var ws = this.accessories[k].ws;
-        debug("Poll", k);
+        debug("Poll", k, count);
         if (ws && ws.readyState === WebSocket.OPEN) {
-          ws.send("1");
+          count++;
+          var msg = {
+            "count": count,
+            "sensitivity": this.sensitivity,
+            "duration": this.duration
+          }
+          ws.send(JSON.stringify(msg, null, 2));
         } else {
           this.log("No socket", k);
           this.accessories[k].getService(Service.TemperatureSensor).getCharacteristic(Characteristic.CurrentTemperature)
@@ -149,8 +157,29 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
       switch (k) {
         case "Motion":
           var value = message.Data[k] > 0;
+          if (this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected).value != value) {
+            this.accessories[name].getService(Service.MotionSensor).getCharacteristic(CustomCharacteristic.LastActivation)
+              .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+          }
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
             .updateValue(value);
+          this.accessories[name].mLoggingService.addEntry({
+            time: moment().unix(),
+            status: value
+          });
+          break;
+
+        case "Trigger":
+          var value = (message.Data[k] ? 1 : 0);
+          debug("Trigger", value);
+          this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
+            .updateValue(value);
+          this.accessories[name].getService(Service.MotionSensor).getCharacteristic(CustomCharacteristic.LastActivation)
+            .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+          this.accessories[name].mLoggingService.addEntry({
+            time: moment().unix(),
+            status: value
+          });
           break;
 
         case "Temperature":
@@ -197,16 +226,28 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
       }
     }
 
-    this.accessories[name].loggingService.addEntry({
-      time: moment().unix(),
-      temp: roundInt(message.Data.Temperature),
-      pressure: roundInt(message.Data.Barometer),
-      humidity: roundInt(message.Data.Humidity)
-    });
+    //  this.accessories[name].wLoggingService.addEntry({
+    //    time: moment().unix(),
+    //    temp: roundInt(message.Data.Temperature),
+    //    pressure: roundInt(message.Data.Barometer),
+    //    humidity: roundInt(message.Data.Humidity)
+    //  });
 
   }
 }
 
+WsSensorPlatform.prototype.setDuration = function(value, callback) {
+  debug("setDuration");
+  this.duration = value;
+  callback();
+}
+
+WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
+
+  debug("setSensitivity");
+  this.sensitivity = value;
+  callback();
+}
 
 WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
@@ -241,6 +282,23 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
       switch (sensors[i]) {
         case "MS":
           newAccessory.addService(Service.MotionSensor, displayName);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Sensitivity);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .getCharacteristic(CustomCharacteristic.Sensitivity)
+            .on('set', this.setSensitivity.bind(this));
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.LastActivation);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Duration);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .getCharacteristic(CustomCharacteristic.Duration)
+            .on('set', this.setDuration.bind(this));
           break;
         case "BME":
           newAccessory.addService(Service.TemperatureSensor, displayName)
@@ -256,13 +314,38 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
             .getService(Service.TemperatureSensor)
             .addCharacteristic(CustomCharacteristic.AtmosphericPressureLevel);
           break;
+        case "ACL":
+          newAccessory.addService(Service.MotionSensor, displayName);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Sensitivity);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.Duration);
+          newAccessory
+            .getService(Service.MotionSensor)
+            .addCharacteristic(CustomCharacteristic.LastActivation);
+          newAccessory.addService(Service.TemperatureSensor, displayName)
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .setProps({
+              minValue: -100,
+              maxValue: 100
+            });
+          break;
+        default:
+          this.log.error("Unknown Sensor Type", sensors[i], name, displayName);
       }
     }
     newAccessory.log = this.log;
-    newAccessory.loggingService = new FakeGatoHistoryService("weather", newAccessory, {
+    newAccessory.mLoggingService = new FakeGatoHistoryService("motion", newAccessory, {
       storage: this.storage,
       minutes: this.refresh * 10 / 60
     });
+
+    //    newAccessory.wLoggingService = new FakeGatoHistoryService("weather", newAccessory, {
+    //      storage: this.storage,
+    //      minutes: this.refresh * 10 / 60
+    //    });
 
     this.accessories[name] = newAccessory;
     this.api.registerPlatformAccessories(plugin_name, platform_name, [newAccessory]);
@@ -282,10 +365,15 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   this.accessories[name] = accessory;
 
   accessory.log = this.log;
-  accessory.loggingService = new FakeGatoHistoryService("weather", accessory, {
+  accessory.mLoggingService = new FakeGatoHistoryService("motion", accessory, {
     storage: this.storage,
     minutes: this.refresh * 10 / 60
   });
+
+  //  accessory.wLoggingService = new FakeGatoHistoryService("weather", accessory, {
+  //    storage: this.storage,
+  //    minutes: this.refresh * 10 / 60
+  //  });
 
   this.log("configureAccessory", name);
 }

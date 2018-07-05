@@ -1,46 +1,3 @@
---[[
-
-    Copyright (c) 2015 Frank Edelhaeuser
-
-    This file is part of lua-mdns.
-
-    Permission is hereby granted, free of charge, to any person obtaining a copy
-    of this software and associated documentation files (the "Software"), to deal
-    in the Software without restriction, including without limitation the rights
-    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-
-    The above copyright notice and this permission notice shall be included in all
-    copies or substantial portions of the Software.
-
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-    SOFTWARE.
-
-    Usage:
-
-        require('mdns')
-
-        local res = mdns_resolve('_printer._tcp') -- find printers
-        if (res) then
-            for k,v in pairs(res) do
-                print(k)
-                for k1,v1 in pairs(v) do
-                    print('  '..k1..': '..v1)
-                end
-            end
-        else
-            print('no result')
-        end
-
-]]--
--- local socket = require('socket')
-
 local module = {}
 
 local function dump(o)
@@ -269,26 +226,6 @@ local function mdns_parse(service, data, answers)
   return answers
 end
 
-
---- Locate MDNS services in local network
---
--- @param service   MDNS service name to search for (e.g. _ipps._tcp). A .local postfix will
---                  be appended if needed. If this parameter is not specified, all services
---                  will be queried.
---
--- @param timeout   Number of seconds to wait for MDNS responses. The default timeout is 2
---                  seconds if this parameter is not specified.
---
--- @return          Table of MDNS services. Entry keys are service identifiers. Each entry
---                  is a table containing all or a subset of the following elements:
---
---                      name: MDNS service name (e.g. HP Laserjet 4L @ server.example.com)
---                      service: MDNS service type (e.g. _ipps._tcp.local)
---                      hostname: hostname
---                      port: port number
---                      ipv4: IPv4 address
---                      ipv6: IPv6 address
---
 function module.mdns_query(service,callback)
 
   package.loaded['lua-mdns']=nil
