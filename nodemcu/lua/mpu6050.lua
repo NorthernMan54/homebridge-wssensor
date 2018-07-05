@@ -24,9 +24,11 @@ local GyroX = 0
 local GyroY = 0
 local GyroZ = 0
 
-local sensitivity = 300
+local sensitivity = 10
 
-local movementA, movementG, Temperature = 0,0,0
+local movementA, movementG, Temperature = 0, 0, 0
+local trigger = false
+local status = nil
 
 function module.init()
   -- Initialize sensors
@@ -87,7 +89,7 @@ function MPU6050_Init() --configure MPU6050
 end
 
 function _Round(X)
-  return math.floor(math.abs(X / sensitivity))
+  return math.floor(math.abs(X / 800 ))
 end
 
 function module.sensitivity(data)
@@ -119,35 +121,46 @@ function module.rawRead()
   movementA = _Round(_AccelX - AccelX) + _Round(_AccelY - AccelY) + _Round(_AccelZ - AccelZ)
   movementG = _Round(_GyroX - GyroX) + _Round(_GyroY - GyroY) + _Round(_GyroZ - GyroZ)
 
-  return movementA, movementG, Temperature
+  trigger = false
+  local _status = false
+
+  if ( movementA + movementG > sensitivity )
+  then
+    -- Movement
+    _status = true
+  else
+    -- Movement stopped
+    _status = false
+  end
+
+  if ( status ~= _status )
+  then
+    trigger = true
+  end
+
+  status = _status
+
+  return movementA, movementG, trigger, status, Temperature
 end
 
-function module.cacheRead()
-  return movementA, movementG, Temperature
-end
-
-function module.read(trigger, interval)
+function module.read( )
   -- Read sensors
-
   local gdstring = ""
   local motionstring = ""
   local tempstring = ""
   local currentstring = ""
   local filler = ""
 
-  local movementA, movementG, Temperature = module.cacheRead()
-  local accelstring = " \"Accel\": "..movementA..", \"Gyro\": "..movementG..", \"Temperature\": "..Temperature
-
-  if trigger ~= nil
-  then
-    accelstring = accelstring..", \"Trigger\": "..tostring(trigger)..", \"Interval\": "..interval
-  end
+  local movement = movementA + movementG
+  local accelstring = " \"Accel\": "..movementA..", \"Gyro\": "..movementG..", \"Movement\": "..movement..
+  ", \"Temperature\": "..Temperature
+  accelstring = accelstring..", \"Motion\": "..tostring(trigger)
 
   local majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
   local upTime = tmr.time()
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
-"\", \"Uptime\": "..upTime..", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer..
+  "\", \"Uptime\": "..upTime..", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer..
 "\", \"Data\": { "..accelstring.." }}\n"
 
 --print(response)

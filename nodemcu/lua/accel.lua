@@ -84,29 +84,7 @@ function module.start(wsserver)
 
   tmr.create():alarm(500, tmr.ALARM_AUTO, function()
 
-    local trigger = false
-    local status = nil
-    --if (tmr.time() - interval) > 1 -- Minimum event length is 1 second
-    --then
-    local _movementA, _movementG, _Temperature = mpu.rawRead()
-    if ( _movementA + _movementG > 0 )
-    then
-      -- Movement
-      if ( movementA + movementG == 0 )
-      then
-        trigger = true
-        status = true
-      end
-    else
-      -- Movement stopped
-      if ( movementA + movementG > 0 )
-      then
-        trigger = true
-        status = false
-      end
-    end
-    movementA = _movementA
-    movementG = _movementG
+    local movementA, movementG, trigger, status, Temperature = mpu.rawRead()
 
     if ( trigger )
     then
