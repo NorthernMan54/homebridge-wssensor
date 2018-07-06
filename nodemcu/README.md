@@ -71,6 +71,7 @@ test.lua
 passwords.lua
 led.lua
 lua-mdns.lua
+json.lua
 ```
 
 * ACL / MPU6050 module please also include
@@ -84,6 +85,13 @@ mpu6050.lua
 
 ```
 bme.lua
+motion.lua
+sensors.lua
+```
+
+* DHT-MS module please also include
+
+```
 motion.lua
 sensors.lua
 ```
