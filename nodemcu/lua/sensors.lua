@@ -52,8 +52,11 @@ function module.read(motion, motionStatus, current)
   end
 
   if string.find(config.Model, "GD") then
-    local green, red = gd.getDoorStatus()
-    gdstring = filler.." \"Green\": \""..green.."\", \"Red\": \""..red.."\""
+    local opened = gpio.read(config.gdopened)
+    local closed = gpio.read(config.gdclosed)
+    print("closed",closed)
+    print("opened",opened)
+    gdstring = filler.." \"Opened\": \""..opened.."\", \"Closed\": \""..closed.."\""
   end
 
   if current ~= nil then
@@ -68,10 +71,10 @@ function module.read(motion, motionStatus, current)
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
   "\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..tempstring..""
-..gdstring..""..motionstring..""..currentstring.." }}\n"
---print(response)
+    ..gdstring..""..motionstring..""..currentstring.." }}\n"
+    --print(response)
 
-return response
-end
+    return response
+  end
 
-return module
+  return module

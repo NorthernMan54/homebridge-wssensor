@@ -1,7 +1,7 @@
 local module = {}
 
 -- Options are DHT or DHT-YL, used by homebridge to determine if moisture data is valid.
-module.Model = "BME-MS"
+module.Model = "BME-GD"
 module.Version = "2.1"
 
 module.ID = wifi.sta.gethostname()
@@ -12,6 +12,14 @@ module.ledState = 1 -- 0: fully disabled, 1: LEDs on, 2: Connected off (Boot/Err
 module.ledRed = 0 -- gpio16
 module.ledBlue = 4 -- gpio2
 module.sensor = 7 -- gpio14
+
+-- Garage Door relay and status sensors
+
+module.gdrelay = 2    -- Relay to control garage door
+module.gdclosed = 3   -- Magnetic reed sensor to detect door closed state
+module.gdopened = 1     -- Magnetic reed sensor to detect door open state
+
+-- BME280 sensor
 
 module.bme280scl = 5  -- D5
 module.bme280sda = 6  -- D6
