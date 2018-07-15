@@ -30,11 +30,15 @@ function module.start(wsserver)
     connected = true;
   end)
   ws:on("receive", function(sck, msg, opcode)
-    local json = require('json')
+    local json = require("json")
     local result = json.parse(msg)
+    print(math.floor(collectgarbage("count")))
+    collectgarbage()
     print('\ngot message:', result["count"], result["sensitivity"], opcode) -- opcode is 1 for text message, 2 for binary
-    local sensors = require('sensors')
+    local sensors = require("sensors")
     sck:send(sensors.read(readSensor()), 1)
+    print(math.floor(collectgarbage("count")))
+    collectgarbage()
     if ( result["sensitivity"] ~= nil )
     then
       --mpu.sensitivity(result["sensitivity"])
@@ -42,6 +46,16 @@ function module.start(wsserver)
     if ( result["duration"] ~= nil )
     then
       duration = result["duration"]
+    end
+
+    if ( result["button"] ~= nil )
+    then
+      local button = result["button"]
+      gpio.write(config.gdrelay, gpio.HIGH)
+      local buttonTimer = tmr.create()
+      buttonTimer:alarm(button, tmr.ALARM_SINGLE, function()
+        gpio.write(config.gdrelay, gpio.LOW)
+      end)
     end
 
     tmr.softwd(600)

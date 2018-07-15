@@ -7,6 +7,7 @@ end
 
 function module.read(motion, motionStatus, current)
   -- Read sensors
+  package.loaded["sensors"] = nil
   local status
   local moist_value = 0
   local temp = -999
@@ -54,9 +55,7 @@ function module.read(motion, motionStatus, current)
   if string.find(config.Model, "GD") then
     local opened = gpio.read(config.gdopened)
     local closed = gpio.read(config.gdclosed)
-    print("closed",closed)
-    print("opened",opened)
-    gdstring = filler.." \"Opened\": \""..opened.."\", \"Closed\": \""..closed.."\""
+    gdstring = filler.." \"Opened\": "..opened..", \"Closed\": "..closed.." "
   end
 
   if current ~= nil then

@@ -228,7 +228,7 @@ end
 
 function module.mdns_query(service,callback)
 
-  package.loaded['lua-mdns']=nil
+  package.loaded["lua-mdns"]=nil
   -- browse all services if no service name specified
   local browse = false
   if (not service) then

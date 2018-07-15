@@ -1,10 +1,18 @@
+local lua_mdns = nil
+
 local function hb_found(ws)
   print("WS Socket available http://"..ws.ipv4..":"..ws.port)
   lua_mdns = nil
+  print("Heap Available: -pre motion  " .. node.heap() )
   print("Reset watch dog")
   tmr.softwd(600)
   led.connected()
 
+  print(math.floor(collectgarbage("count")))
+  collectgarbage()
+  print(math.floor(collectgarbage("count")))
+  collectgarbage()
+  print(math.floor(collectgarbage("count")))
   collectgarbage()
   print("Heap Available: -pre motion  " .. node.heap() )
 
@@ -38,7 +46,7 @@ local function hb_found(ws)
     print("Heap Available: -mdns  " .. node.heap() ) -- 18720
 
     led.mdns()
-    local lua_mdns = require("lua-mdns")
+    lua_mdns = require("lua-mdns")
     lua_mdns.mdns_query("_wssensor._tcp", hb_found)
   end
 

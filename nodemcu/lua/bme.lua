@@ -2,6 +2,7 @@ local module = {}
 
 function module.read()
 
+  package.loaded["bme"] = nil
   local alt = 320 -- altitude of the measurement place
   i2c.setup(0,config.bme280sda, config.bme280scl,i2c.SLOW)
   local device = bme280.setup()
