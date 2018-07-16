@@ -168,7 +168,19 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
             status: value
           });
           break;
-
+          case "CurrentDoorState":
+            var value = message.Data[k];
+            if (this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.CurrentDoorState).value != value) {
+              this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.LastActivation)
+                .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            }
+            this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.CurrentDoorState)
+              .updateValue(value);
+            this.accessories[name].mLoggingService.addEntry({
+              time: moment().unix(),
+              status: value
+            });
+            break;
         case "Trigger":
           var value = (message.Data[k] ? 1 : 0);
           debug("Trigger", value);
@@ -242,6 +254,17 @@ WsSensorPlatform.prototype.setDuration = function(value, callback) {
   callback();
 }
 
+WsSensorPlatform.prototype.setTargetDoorState = function(accessory, value, callback) {
+  this.log("setTargetDoorState Request", accessory.displayName, value);
+  var msg = {
+    "count": count,
+    "button": 300
+  }
+  //this.log("WS",accessory);
+  accessory.ws.send(JSON.stringify(msg, null, 2));
+  callback();
+}
+
 WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
 
   debug("setSensitivity");
@@ -280,6 +303,14 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
     for (var i = 0; i < sensors.length; i++) {
       switch (sensors[i]) {
+        case "GD":
+          newAccessory.addService(Service.GarageDoorOpener, displayName)
+            .getCharacteristic(Characteristic.TargetDoorState)
+            .on('set', this.setTargetDoorState.bind(this,newAccessory));
+          newAccessory
+            .getService(Service.GarageDoorOpener)
+            .addCharacteristic(CustomCharacteristic.LastActivation);
+          break;
         case "MS":
           newAccessory.addService(Service.MotionSensor, displayName);
           newAccessory
@@ -363,6 +394,11 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   var name = accessory.context.hostname;
 
   this.accessories[name] = accessory;
+
+  if (accessory.getService(Service.GarageDoorOpener))
+    accessory.getService(Service.GarageDoorOpener)
+    .getCharacteristic(Characteristic.TargetDoorState)
+    .on('set', this.setTargetDoorState.bind(this,accessory));
 
   accessory.log = this.log;
   accessory.mLoggingService = new FakeGatoHistoryService("motion", accessory, {
