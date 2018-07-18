@@ -52,24 +52,7 @@ function module.read(motion, motionStatus, current)
     motionstring = filler.." \"Motion\": "..motion..", \"MotionStatus\": "..motionStatus.." "
   end
 
-  -- Characteristic.CurrentDoorState.OPEN = 0; 
-  -- Characteristic.CurrentDoorState.CLOSED = 1;
-  -- Characteristic.CurrentDoorState.OPENING = 2;
-  -- Characteristic.CurrentDoorState.CLOSING = 3;
-  -- Characteristic.CurrentDoorState.STOPPED = 4;
-
   if string.find(config.Model, "GD") then
-    local opened = gpio.read(config.gdopened)
-    local closed = gpio.read(config.gdclosed)
-    local CurrentDoorState
-
-    if ( opened == 1 and closed == 1 ) then
-      CurrentDoorState = 4
-    elseif ( opened == 1 and closed == 0 ) then
-      CurrentDoorState = 1
-    elseif ( opened == 0 and closed == 1 ) then
-      CurrentDoorState = 0
-    end
     gdstring = filler.." \"CurrentDoorState\": "..CurrentDoorState.." "
   end
 

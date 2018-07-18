@@ -53,6 +53,14 @@ local function hb_found(ws)
   -- Start of code, reboot if not connected within 60 seconds
   tmr.softwd(60)
 
+  --STEP2: compile all .lua files to .lc files
+local compilelua = "compile.lua"
+if file.exists(compilelua) then
+    dofile(compilelua)(compilelua)
+end
+compilelua = nil
+dofile("compile.lc")()
+
   print("Heap Available:  " .. node.heap()) -- 38984
   config = require("config")
   print("Heap Available: config " .. node.heap()) -- 37248 1500
