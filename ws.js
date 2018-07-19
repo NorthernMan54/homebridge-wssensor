@@ -182,7 +182,7 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
             .updateValue(value % 2);
           this.accessories[name].mLoggingService.addEntry({
             time: moment().unix(),
-            status: value
+            status: value % 2
           });
 
           break;
@@ -306,6 +306,8 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
     var sensors = accessoryDef.Model.split('-');
 
+    history = "weather";
+
     for (var i = 0; i < sensors.length; i++) {
       switch (sensors[i]) {
         case "GD":
@@ -315,6 +317,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           newAccessory
             .getService(Service.GarageDoorOpener)
             .addCharacteristic(CustomCharacteristic.LastActivation);
+          history = "door";
           break;
         case "MS":
           newAccessory.addService(Service.MotionSensor, displayName);
@@ -335,6 +338,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
             .getService(Service.MotionSensor)
             .getCharacteristic(CustomCharacteristic.Duration)
             .on('set', this.setDuration.bind(this));
+          history = "motion";
           break;
         case "BME":
           newAccessory.addService(Service.TemperatureSensor, displayName)
@@ -367,13 +371,14 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
               minValue: -100,
               maxValue: 100
             });
+          history = "motion";
           break;
         default:
           this.log.error("Unknown Sensor Type", sensors[i], name, displayName);
       }
     }
     newAccessory.log = this.log;
-    newAccessory.mLoggingService = new FakeGatoHistoryService("motion", newAccessory, {
+    newAccessory.mLoggingService = new FakeGatoHistoryService(history, newAccessory, {
       storage: this.storage,
       minutes: this.refresh * 10 / 60
     });
