@@ -19,7 +19,7 @@ return function(filename)
     else
         local allFiles = file.list()
         for f,s in pairs(allFiles) do
-            if f~="init.lua" and #f >= 4 and string.sub(f, -4, -1) == ".lua" then
+            if f~="init.lua" and f~="test.lua" and #f >= 4 and string.sub(f, -4, -1) == ".lua" then
                 compileAndRemoveIfNeeded(f)
             end
         end

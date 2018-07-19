@@ -22,22 +22,17 @@ local function readSensor()
     CurrentDoorState = 1  -- Closed
   elseif ( opened == 0 and closed == 1 ) then
     CurrentDoorState = 0  -- Open
-  elseif ( opened == 1 and closed == 1 and tmr.time() - buttonPress < 10 ) then
-    print("Door is moving",buttonPress)
-    if ( oldDoorState == 0 or oldDoorState == 2 ) then
-      CurrentDoorState = 2
-    elseif ( oldDoorState == 1 or oldDoorState == 3 ) then
-      CurrentDoorState = 3
-    else
-      CurrentDoorState = 3
-    end
   elseif ( opened == 1 and closed == 1 ) then
-    -- Door is stopped
-    print("Door is stopped",buttonPress)
-    CurrentDoorState = 4
+    if ( oldDoorState == 0 or oldDoorState == 3 ) then
+      CurrentDoorState = 3
+    elseif ( oldDoorState == 1 or oldDoorState == 2 ) then
+      CurrentDoorState = 2
+    else
+      CurrentDoorState = 4
+    end
   else
     -- door is unknown
-    CurrentDoorState = 0
+    CurrentDoorState = 4
   end
   print("CurrentDoorState", CurrentDoorState)
 end
@@ -61,9 +56,7 @@ function module.start(wsserver)
     local result = json.parse(msg)
     collectgarbage()
     print('\ngot message:', result["count"], result["sensitivity"], opcode) -- opcode is 1 for text message, 2 for binary
-    local sensors = require("sensors")
-    sck:send(sensors.read(readSensor()), 1)
-    collectgarbage()
+
     if ( result["sensitivity"] ~= nil )
     then
       --mpu.sensitivity(result["sensitivity"])
@@ -82,6 +75,10 @@ function module.start(wsserver)
       buttonTimer:alarm(button, tmr.ALARM_SINGLE, function()
         gpio.write(config.gdrelay, gpio.LOW)
       end)
+    else
+      local sensors = require("sensors")
+      sck:send(sensors.read(readSensor()), 1)
+      collectgarbage()
     end
 
     tmr.softwd(600)
