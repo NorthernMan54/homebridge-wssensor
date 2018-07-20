@@ -171,19 +171,25 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
         case "CurrentDoorState":
           var value = message.Data[k];
 
-          if (this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.CurrentDoorState).value != value) {
+          if (this.accessories[name].getService(Service.GarageDoorOpener)
+          .getCharacteristic(Characteristic.CurrentDoorState).value != value) {
             this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.LastActivation)
               .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+          }
+
+          if (this.accessories[name].getService(Service.GarageDoorOpener)
+          .getCharacteristic(Characteristic.CurrentDoorState).value % 2 != value %2 ) {
+            this.accessories[name].mLoggingService.addEntry({
+              time: moment().unix(),
+              status: value % 2
+            });
           }
           this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.CurrentDoorState)
             .updateValue(value);
           debug("CDS %s, TDS %s", value, value % 2);
           this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.TargetDoorState)
             .updateValue(value % 2);
-          this.accessories[name].mLoggingService.addEntry({
-            time: moment().unix(),
-            status: value % 2
-          });
+
 
           break;
         case "Trigger":
@@ -306,7 +312,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
     var sensors = accessoryDef.Model.split('-');
 
-    history = "weather";
+    newAccessory.context.history = "weather";
 
     for (var i = 0; i < sensors.length; i++) {
       switch (sensors[i]) {
@@ -317,7 +323,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           newAccessory
             .getService(Service.GarageDoorOpener)
             .addCharacteristic(CustomCharacteristic.LastActivation);
-          history = "door";
+          newAccessory.context.history = "door";
           break;
         case "MS":
           newAccessory.addService(Service.MotionSensor, displayName);
@@ -338,7 +344,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
             .getService(Service.MotionSensor)
             .getCharacteristic(CustomCharacteristic.Duration)
             .on('set', this.setDuration.bind(this));
-          history = "motion";
+          newAccessory.context.history = "motion";
           break;
         case "BME":
           newAccessory.addService(Service.TemperatureSensor, displayName)
@@ -371,14 +377,14 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
               minValue: -100,
               maxValue: 100
             });
-          history = "motion";
+          newAccessory.context.history = "motion";
           break;
         default:
           this.log.error("Unknown Sensor Type", sensors[i], name, displayName);
       }
     }
     newAccessory.log = this.log;
-    newAccessory.mLoggingService = new FakeGatoHistoryService(history, newAccessory, {
+    newAccessory.mLoggingService = new FakeGatoHistoryService(newAccessory.context.history, newAccessory, {
       storage: this.storage,
       minutes: this.refresh * 10 / 60
     });
@@ -403,6 +409,8 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   cachedAccessories++;
   var name = accessory.context.hostname;
 
+  debug("Configuring", accessory.context);
+
   this.accessories[name] = accessory;
 
   if (accessory.getService(Service.GarageDoorOpener))
@@ -411,7 +419,7 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
     .on('set', this.setTargetDoorState.bind(this, accessory));
 
   accessory.log = this.log;
-  accessory.mLoggingService = new FakeGatoHistoryService("motion", accessory, {
+  accessory.mLoggingService = new FakeGatoHistoryService(accessory.context.history, accessory, {
     storage: this.storage,
     minutes: this.refresh * 10 / 60
   });
