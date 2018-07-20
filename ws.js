@@ -172,18 +172,24 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
           var value = message.Data[k];
 
           if (this.accessories[name].getService(Service.GarageDoorOpener)
-          .getCharacteristic(Characteristic.CurrentDoorState).value != value) {
+            .getCharacteristic(Characteristic.CurrentDoorState).value != value) {
+            // Only update on change in value
             this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.LastActivation)
               .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            if (value == 0) {
+              // Only when opened
+              this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.TimesOpened)
+                .updateValue(this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.TimesOpened).value + 1);
+            }
+            if (value < 2) {
+              // Only when opened and closed
+              this.accessories[name].mLoggingService.addEntry({
+                time: moment().unix(),
+                status: value % 2
+              });
+            }
           }
 
-          if (this.accessories[name].getService(Service.GarageDoorOpener)
-          .getCharacteristic(Characteristic.CurrentDoorState).value % 2 != value %2 ) {
-            this.accessories[name].mLoggingService.addEntry({
-              time: moment().unix(),
-              status: value % 2
-            });
-          }
           this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.CurrentDoorState)
             .updateValue(value);
           debug("CDS %s, TDS %s", value, value % 2);
@@ -283,6 +289,13 @@ WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
   callback();
 }
 
+
+WsSensorPlatform.prototype.setResetTotal = function(value, callback) {
+  debug("setResetTotal");
+  this.getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.TimesOpened).updateValue(0);
+  callback();
+}
+
 WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
   var name = accessoryDef.Hostname;
@@ -323,6 +336,17 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           newAccessory
             .getService(Service.GarageDoorOpener)
             .addCharacteristic(CustomCharacteristic.LastActivation);
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.OpenDuration)
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.ClosedDuration)
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.TimesOpened);
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.ResetTotal);
+          newAccessory
+            .getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.ResetTotal)
+            .on('set', this.setResetTotal.bind(newAccessory));
           newAccessory.context.history = "door";
           break;
         case "MS":
@@ -413,11 +437,14 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
 
   this.accessories[name] = accessory;
 
-  if (accessory.getService(Service.GarageDoorOpener))
+  if (accessory.getService(Service.GarageDoorOpener)) {
     accessory.getService(Service.GarageDoorOpener)
-    .getCharacteristic(Characteristic.TargetDoorState)
-    .on('set', this.setTargetDoorState.bind(this, accessory));
-
+      .getCharacteristic(Characteristic.TargetDoorState)
+      .on('set', this.setTargetDoorState.bind(this, accessory));
+    accessory.getService(Service.GarageDoorOpener)
+      .getCharacteristic(CustomCharacteristic.ResetTotal)
+      .on('set', this.setResetTotal.bind(accessory));
+  }
   accessory.log = this.log;
   accessory.mLoggingService = new FakeGatoHistoryService(accessory.context.history, accessory, {
     storage: this.storage,
