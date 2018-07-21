@@ -24,12 +24,21 @@ module.gdopened = 1   -- Magnetic reed sensor to detect door open state
 module.bme280scl = 5  -- D5
 module.bme280sda = 6  -- D6
 
+-- MPU6050 / Acceleration sensor
+
 module.mpu6050scl = 6  -- D5 and D6 didn't work with the MPU 6050 for some reason
 module.mpu6050sda = 7  --
 
+-- DHT-22
+
 module.DHT22 = 2    -- D2
+
+-- Moisture Sensor
+
 module.YL69 = 0     -- adc pin 0
 module.YL69P = 7    -- 5 with DHT and 7 with BME
+
+-- Motion Sensor
 
 module.SC501 = 2    -- AM312 Motion Sensor
 module.SW420 = 2    -- SW-420 Vibration Sensor
