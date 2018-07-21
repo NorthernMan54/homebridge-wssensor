@@ -19,6 +19,7 @@ function module.read(motion, motionStatus, current)
   local tempstring = ""
   local currentstring = ""
   local filler = ""
+  local upTime = tmr.time()
 
   if string.find(config.Model, "BME") then
     local bme = require("bme")
@@ -67,9 +68,10 @@ function module.read(motion, motionStatus, current)
   --      print("35")
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
-  "\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..tempstring..""
-    ..gdstring..""..motionstring..""..currentstring.." }}\n"
+  "\", \"Uptime\": "..upTime..", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..
+  tempstring..""..gdstring..""..motionstring..""..currentstring.." }}\n"
     --print(response)
+
 
     return response
   end

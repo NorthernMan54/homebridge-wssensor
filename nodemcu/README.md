@@ -14,6 +14,10 @@ Sensor options
    - AM312 PIR Monition Sensor  ( https://www.aliexpress.com/item/Mini-IR-Pyroelectric-Infrared-PIR-Motion-Human-Sensor-Automatic-Detector-Module-high-reliability-12mm-x-25mm/32749737125.html?spm=a2g0s.9042311.0.0.6ec74c4dwcSLq4 )
    - MPU 6050 Acceleration/gyroscope sensor aka GY-521 Breakout board
 
+Garage Door
+  - I used a 1 channel 5 volt relay
+  - 2 Magnetic Reed contact switches
+
 # Circuit Diagrams
 
 ## BME-MS
@@ -50,53 +54,23 @@ Pinout
 module.SSID["SSID1"] = { ssid="SSID1", pwd = "password" }
 ```
 
-2. Model - Either DHT-MS,  BME-MS, or ACL used by homebridge-wssensor to determine which sensor type to create in homebridge
+2. Set your device Model in config.lua - Either DHT-MS,  BME-MS, BME-GD, or ACL used by homebridge-wssensor to determine which sensor type to create in homebridge
 
 ```
 module.Model = "DHT-MS"
 or
 module.Model = "BME-MS"
 or
+module.Model = "BME-GD"
+or
 module.Model = "ACL"
 ```
 
 # Lua Program installation
 
-1. Please use ESPlorer to install the lua files on the device.
+1. I used nodemcu-uploader which is available here https://github.com/kmpm/nodemcu-uploader
 
-```
-config.lua
-setup.lua
-test.lua
-passwords.lua
-led.lua
-lua-mdns.lua
-json.lua
-```
-
-* ACL / MPU6050 module please also include
-
-```
-accel.lua
-mpu6050.lua
-```
-
-* BME-MS module please also include
-
-```
-bme.lua
-motion.lua
-sensors.lua
-```
-
-* DHT-MS module please also include
-
-```
-motion.lua
-sensors.lua
-```
-
-2. Compile all lua files to lc files using ESPlorer
+2. Run the script upload.sh, this will upload all the lua files to your esp8266
 
 3. Test your device by running test.lua
 
