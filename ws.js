@@ -278,12 +278,17 @@ WsSensorPlatform.prototype.setTargetDoorState = function(accessory, value, callb
     "button": 300
   }
   //this.log("WS",accessory);
-  if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
-    accessory.ws.send(JSON.stringify(msg, null, 2));
-    callback();
+  if (accessory..getCharacteristic(Characteristic.TargetDoorState).value != value) {
+    if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
+      accessory.ws.send(JSON.stringify(msg, null, 2));
+      callback();
+    } else {
+      this.log("No socket", accessory.displayName);
+      callback(new Error("No socket"));
+    }
   } else {
-    this.log("No socket", accessory.displayName);
-    callback(new Error("No socket"));
+    this.log("No controlling door, door already open/closed");
+    callback();
   }
 
 }
@@ -336,7 +341,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
     for (var i = 0; i < sensors.length; i++) {
       switch (sensors[i]) {
         case "GD":
-          newAccessory.addService(Service.GarageDoorOpener, displayName+" Door")
+          newAccessory.addService(Service.GarageDoorOpener, displayName + " Door")
             .getCharacteristic(Characteristic.TargetDoorState)
             .on('set', this.setTargetDoorState.bind(this, newAccessory));
           newAccessory
