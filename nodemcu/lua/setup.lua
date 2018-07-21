@@ -23,7 +23,7 @@ local function wifi_start(list_aps)
 end
 
 function module.start(wifi_ready)
-  package.loaded['setup']=nil
+  package.loaded[module]=nil
   print("Configuring Wifi ...")
   wifi.setmode(wifi.STATION)
   wifi.eventmon.register(wifi.eventmon.STA_GOT_IP,wifi_ready)

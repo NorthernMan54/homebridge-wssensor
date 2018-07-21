@@ -168,7 +168,36 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
             status: value
           });
           break;
+        case "CurrentDoorState":
+          var value = message.Data[k];
 
+          if (this.accessories[name].getService(Service.GarageDoorOpener)
+            .getCharacteristic(Characteristic.CurrentDoorState).value != value) {
+            // Only update on change in value
+            this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.LastActivation)
+              .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            if (value == 0) {
+              // Only when opened
+              this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.TimesOpened)
+                .updateValue(this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.TimesOpened).value + 1);
+            }
+            if (value < 2) {
+              // Only when opened and closed
+              this.accessories[name].mLoggingService.addEntry({
+                time: moment().unix(),
+                status: value % 2
+              });
+            }
+          }
+
+          this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.CurrentDoorState)
+            .updateValue(value);
+          debug("CDS %s, TDS %s", value, value % 2);
+          this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.TargetDoorState)
+            .updateValue(value % 2);
+
+
+          break;
         case "Trigger":
           var value = (message.Data[k] ? 1 : 0);
           debug("Trigger", value);
@@ -242,10 +271,34 @@ WsSensorPlatform.prototype.setDuration = function(value, callback) {
   callback();
 }
 
+WsSensorPlatform.prototype.setTargetDoorState = function(accessory, value, callback) {
+  this.log("setTargetDoorState Request", accessory.displayName, value);
+  var msg = {
+    "count": count,
+    "button": 300
+  }
+  //this.log("WS",accessory);
+  if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
+    accessory.ws.send(JSON.stringify(msg, null, 2));
+    callback();
+  } else {
+    this.log("No socket", accessory.displayName);
+    callback(new Error("No socket"));
+  }
+
+}
+
 WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
 
   debug("setSensitivity");
   this.sensitivity = value;
+  callback();
+}
+
+
+WsSensorPlatform.prototype.setResetTotal = function(value, callback) {
+  debug("setResetTotal");
+  this.getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.TimesOpened).updateValue(0);
   callback();
 }
 
@@ -278,8 +331,30 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
 
     var sensors = accessoryDef.Model.split('-');
 
+    newAccessory.context.history = "weather";
+
     for (var i = 0; i < sensors.length; i++) {
       switch (sensors[i]) {
+        case "GD":
+          newAccessory.addService(Service.GarageDoorOpener, displayName)
+            .getCharacteristic(Characteristic.TargetDoorState)
+            .on('set', this.setTargetDoorState.bind(this, newAccessory));
+          newAccessory
+            .getService(Service.GarageDoorOpener)
+            .addCharacteristic(CustomCharacteristic.LastActivation);
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.OpenDuration)
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.ClosedDuration)
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.TimesOpened);
+          newAccessory
+            .getService(Service.GarageDoorOpener).addCharacteristic(CustomCharacteristic.ResetTotal);
+          newAccessory
+            .getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.ResetTotal)
+            .on('set', this.setResetTotal.bind(newAccessory));
+          newAccessory.context.history = "door";
+          break;
         case "MS":
           newAccessory.addService(Service.MotionSensor, displayName);
           newAccessory
@@ -299,6 +374,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
             .getService(Service.MotionSensor)
             .getCharacteristic(CustomCharacteristic.Duration)
             .on('set', this.setDuration.bind(this));
+          newAccessory.context.history = "motion";
           break;
         case "BME":
           newAccessory.addService(Service.TemperatureSensor, displayName)
@@ -331,13 +407,14 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
               minValue: -100,
               maxValue: 100
             });
+          newAccessory.context.history = "motion";
           break;
         default:
           this.log.error("Unknown Sensor Type", sensors[i], name, displayName);
       }
     }
     newAccessory.log = this.log;
-    newAccessory.mLoggingService = new FakeGatoHistoryService("motion", newAccessory, {
+    newAccessory.mLoggingService = new FakeGatoHistoryService(newAccessory.context.history, newAccessory, {
       storage: this.storage,
       minutes: this.refresh * 10 / 60
     });
@@ -362,10 +439,20 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   cachedAccessories++;
   var name = accessory.context.hostname;
 
+  debug("Configuring", accessory.context);
+
   this.accessories[name] = accessory;
 
+  if (accessory.getService(Service.GarageDoorOpener)) {
+    accessory.getService(Service.GarageDoorOpener)
+      .getCharacteristic(Characteristic.TargetDoorState)
+      .on('set', this.setTargetDoorState.bind(this, accessory));
+    accessory.getService(Service.GarageDoorOpener)
+      .getCharacteristic(CustomCharacteristic.ResetTotal)
+      .on('set', this.setResetTotal.bind(accessory));
+  }
   accessory.log = this.log;
-  accessory.mLoggingService = new FakeGatoHistoryService("motion", accessory, {
+  accessory.mLoggingService = new FakeGatoHistoryService(accessory.context.history, accessory, {
     storage: this.storage,
     minutes: this.refresh * 10 / 60
   });

@@ -158,10 +158,11 @@ function module.read( )
 
   local majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
   local upTime = tmr.time()
+
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
-  "\", \"Uptime\": "..upTime..", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer..
-"\", \"Data\": { "..accelstring.." }}\n"
+  "\", \"Uptime\": "..upTime..", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..
+  accelstring.." }}\n"
 
 --print(response)
 

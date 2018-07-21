@@ -7,6 +7,7 @@ end
 
 function module.read(motion, motionStatus, current)
   -- Read sensors
+  package.loaded["sensors"] = nil
   local status
   local moist_value = 0
   local temp = -999
@@ -18,6 +19,7 @@ function module.read(motion, motionStatus, current)
   local tempstring = ""
   local currentstring = ""
   local filler = ""
+  local upTime = tmr.time()
 
   if string.find(config.Model, "BME") then
     local bme = require("bme")
@@ -52,8 +54,7 @@ function module.read(motion, motionStatus, current)
   end
 
   if string.find(config.Model, "GD") then
-    local green, red = gd.getDoorStatus()
-    gdstring = filler.." \"Green\": \""..green.."\", \"Red\": \""..red.."\""
+    gdstring = filler.." \"CurrentDoorState\": "..CurrentDoorState.." "
   end
 
   if current ~= nil then
@@ -67,11 +68,12 @@ function module.read(motion, motionStatus, current)
   --      print("35")
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
-  "\", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..tempstring..""
-..gdstring..""..motionstring..""..currentstring.." }}\n"
---print(response)
+  "\", \"Uptime\": "..upTime..", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..
+  tempstring..""..gdstring..""..motionstring..""..currentstring.." }}\n"
+    --print(response)
 
-return response
-end
 
-return module
+    return response
+  end
+
+  return module
