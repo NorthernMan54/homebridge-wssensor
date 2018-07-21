@@ -278,7 +278,7 @@ WsSensorPlatform.prototype.setTargetDoorState = function(accessory, value, callb
     "button": 300
   }
   //this.log("WS",accessory);
-  if (accessory..getCharacteristic(Characteristic.TargetDoorState).value != value) {
+  if (accessory.getCharacteristic(Characteristic.TargetDoorState).value != value) {
     if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
       accessory.ws.send(JSON.stringify(msg, null, 2));
       callback();
