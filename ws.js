@@ -278,8 +278,14 @@ WsSensorPlatform.prototype.setTargetDoorState = function(accessory, value, callb
     "button": 300
   }
   //this.log("WS",accessory);
-  accessory.ws.send(JSON.stringify(msg, null, 2));
-  callback();
+  if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
+    accessory.ws.send(JSON.stringify(msg, null, 2));
+    callback();
+  } else {
+    this.log("No socket", accessory.displayName);
+    callback(new Error("No socket"));
+  }
+
 }
 
 WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
