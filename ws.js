@@ -336,7 +336,7 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
     for (var i = 0; i < sensors.length; i++) {
       switch (sensors[i]) {
         case "GD":
-          newAccessory.addService(Service.GarageDoorOpener, displayName)
+          newAccessory.addService(Service.GarageDoorOpener, displayName+" Door")
             .getCharacteristic(Characteristic.TargetDoorState)
             .on('set', this.setTargetDoorState.bind(this, newAccessory));
           newAccessory
