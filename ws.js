@@ -49,7 +49,6 @@ function WsSensorPlatform(log, config, api) {
 
   this.log = log;
   this.accessories = {};
-  this.hap_accessories = {};
 
   debug("config = %s", JSON.stringify(config));
 
@@ -82,7 +81,6 @@ function WsSensorPlatform(log, config, api) {
     "accessories": this.accessories,
     "Characteristic": Characteristic,
     "addAccessory": this.addAccessory.bind(this),
-    "removeAccessory": this.removeAccessory.bind(this),
     "getAccessories": this.getAccessories.bind(this),
     "sendEvent": this.sendEvent.bind(this)
   }
@@ -104,7 +102,7 @@ function WsSensorPlatform(log, config, api) {
 
       this.Websocket.startServer();
 
-      this.Advertise.createAdvertisement();
+      this.Advertise.createAdvertisement("wssensorTest");
 
       debug("Number of cached Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
@@ -300,6 +298,18 @@ WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
   callback();
 }
 
+WsSensorPlatform.prototype.identify = function(accessory, value, callback) {
+
+  if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
+    this.log("Not removing",accessory.displayName);
+  } else {
+    this.log("Removing",accessory.displayName,accessory.context.hostname);
+    this.api.unregisterPlatformAccessories("homebridge-wssensor", "wssensor", [accessory]);
+    delete this.accessories[accessory.context.hostname];
+  }
+  callback();
+}
+
 
 WsSensorPlatform.prototype.setResetTotal = function(value, callback) {
   debug("setResetTotal");
@@ -333,6 +343,8 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
       .setCharacteristic(Characteristic.Model, accessoryDef.Model + " " + accessoryDef.Version)
       .setCharacteristic(Characteristic.FirmwareRevision, require('./package.json').version)
       .setCharacteristic(Characteristic.SerialNumber, hostname + "-" + name);
+
+    newAccessory.on('identify', this.identify.bind(this, newAccessory));
 
     var sensors = accessoryDef.Model.split('-');
 
@@ -448,6 +460,8 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
 
   this.accessories[name] = accessory;
 
+  accessory.on('identify', this.identify.bind(this, accessory));
+
   if (accessory.getService(Service.GarageDoorOpener)) {
     accessory.getService(Service.GarageDoorOpener)
       .getCharacteristic(Characteristic.TargetDoorState)
@@ -468,26 +482,6 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
   //  });
 
   this.log("configureAccessory", name);
-}
-
-WsSensorPlatform.prototype.removeAccessory = function(name) {
-
-  var ack, message;
-
-  if (typeof(this.accessories[name]) !== "undefined") {
-    debug("removeAccessory '%s'", name);
-
-    this.api.unregisterPlatformAccessories(plugin_name, platform_name, [this.hap_accessories[name]]);
-    delete this.accessories[name];
-    delete this.hap_accessories[name];
-    ack = true;
-    message = "accessory '" + name + "' is removed.";
-  } else {
-    ack = false;
-    message = "accessory '" + name + "' not found.";
-  }
-  this.log("removeAccessory %s", message);
-  this.Websocket.sendAck(ack, message);
 }
 
 WsSensorPlatform.prototype.getAccessories = function(name) {
