@@ -1,3 +1,4 @@
+--SAFETRIM
 local module = {}
 
 local function dump(o)

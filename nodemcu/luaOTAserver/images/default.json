@@ -5,17 +5,17 @@
     "compile.lua",
     "config.lua",
     "current.lua",
-    "garage.lua",
-    "json.lua",
+    "passwords.lua",
     "led.lua",
-    "lua-mdns.lua",
     "motion.lua",
     "mpu6050.lua",
-    "passwords.lua",
     "passwords_sample.lua",
     "sensors.lua",
     "setup.lua",
     "test.lua",
+    "garage.lua",
+        "json.lua",
+            "lua-mdns.lua",
     "vibration.lua"
   ]
 }

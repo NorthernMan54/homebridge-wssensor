@@ -196,11 +196,11 @@ provision = function(esp, config, inventory, fingerprint)
           content = content:gsub("%-%-[^\n]*","")
           size = #content
         end
-        action = "cm"
+        action = "dl"
       else
         action = "dl"
       end
-      print ("Sending file ".. name)
+      print ("Sending file ".. name,size)
 
       for i = 1, size, 1024 do
         if i+1023 < size then
@@ -211,6 +211,7 @@ provision = function(esp, config, inventory, fingerprint)
           buf = content:sub(i)
         end
         send_command(esp, cmd, buf)
+        print ("Sent file ".. name)
         local resp = receive_and_parse(esp)
         assert(resp and resp.s == "OK", "Command to ESP failed")
         if resp.lcsize then

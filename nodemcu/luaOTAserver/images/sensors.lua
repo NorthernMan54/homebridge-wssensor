@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local module = {}
 
 function module.start()

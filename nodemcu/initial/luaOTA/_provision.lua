@@ -1,12 +1,13 @@
 --SAFETRIM
 -- function _provision(self,socket,first_rec)
- 
+
 local self, socket, first_rec = ...
 local crypto, file, json, node, table = crypto, file, sjson,   node, table
 local stripdebug, gc = node.stripdebug, collectgarbage
+local log = self.log
 
 local buf = {}
-gc(); gc() 
+gc(); gc()
 
 local function getbuf()  -- upval: buf, table
   if #buf > 0 then return table.remove(buf, 1) end -- else return nil
@@ -14,8 +15,8 @@ end
 
 -- Process a provisioning request record
 local function receiveRec(socket, rec)  -- upval: self, buf, crypto
-  -- Note that for 2nd and subsequent responses, we assme that the service has 
-  -- "authenticated" itself, so any protocol errors are fatal and lkely to 
+  -- Note that for 2nd and subsequent responses, we assme that the service has
+  -- "authenticated" itself, so any protocol errors are fatal and lkely to
   -- cause a repeating boot, throw any protocol errors are thrown.
   local buf, config, file, log = buf, self.config, file, self.log
   local cmdlen = (rec:find('\n',1, true) or 0) - 1
@@ -28,13 +29,16 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
   local s; s, cmd = pcall(json.decode, cmd)
   local action,resp = cmd.a, {s = "OK"}
   local chunk
+  gc(); gc()
 
   if action == "ls" then
+    log("ls:", node.heap())
     for name,len in pairs(file.list()) do
       resp[name] = len
     end
 
   elseif action == "mv" then
+    log("mv:", node.heap())
     if file.exists(cmd.from) then
       if file.exists(cmd.to) then file.remove(cmd.to) end
       if not file.rename(cmd.from,cmd.to) then
@@ -55,11 +59,16 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
 
     if action == "cm" then
       stripdebug(2)
+      log("cm",cmd.name,node.heap())
+      gc(); gc()
       local lcf,msg = load(getbuf, cmd.name)
+      log("Heap-62:", node.heap())
       if not msg then
         gc(); gc()
+        log("Heap-65:", node.heap())
         local code, name = string.dump(lcf), cmd.name:sub(1,-5) .. ".lc"
         local s = file.open(name, "w+")
+        log("Heap-68:", node.heap())
         if s then
           for i = 1, #code, 1024 do
             s = s and file.write(code:sub(i, ((i+1023)>#code) and i+1023 or #code))
@@ -70,7 +79,8 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
         if s then
           resp.lcsize=#code
           print("Updated ".. name)
-        else 
+          log("Heap:", node.heap())
+        else
           msg = "file write failed"
         end
      end
@@ -80,6 +90,8 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
      buf = {}
 
     elseif action == "dl" then
+      log("dl:", node.heap())
+      gc(); gc()
       local s = file.open(cmd.name, "w+")
       if s then
         for i = 1, #buf do
@@ -87,16 +99,18 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
         end
         file.close()
       end
-   
+
       if s then
-        print("Updated ".. name)
-      else 
+        print("Updated ".. cmd.name)
+        log("Heap:", node.heap())
+      else
         file.remove(name)
         resp.s = "write failed"
       end
       buf = {}
-   
+
     elseif action == "ul" then
+      log("ul:", node.heap())
       if file.open(cmd.name, "r") then
         file.seek("set", cmd.offset)
         chunk = file.read(cmd.len)
@@ -120,6 +134,6 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
 end
 
 -- Replace the receive CB by the provisioning version and then tailcall this to
--- process this first record. 
+-- process this first record.
 socket:on("receive", receiveRec)
 return receiveRec(socket, first_rec)

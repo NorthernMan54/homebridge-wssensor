@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local module = {}
 local ws
 local duration = 5 -- minumum length of trigger event is 10 sec

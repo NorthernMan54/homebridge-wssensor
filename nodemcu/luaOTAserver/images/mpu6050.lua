@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local module = {}
 
 local id = 0 -- always 0
