@@ -9,13 +9,13 @@
     "led.lua",
     "motion.lua",
     "mpu6050.lua",
-    "passwords_sample.lua",
     "sensors.lua",
     "setup.lua",
     "test.lua",
     "garage.lua",
         "json.lua",
-            "lua-mdns.lua",
-    "vibration.lua"
+    "vibration.lua",
+    "test.lua",
+    "init.lua"
   ]
 }

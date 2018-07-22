@@ -2,38 +2,38 @@
 -- function _provision(self,socket,first_rec)
 
 local self, socket, first_rec = ...
-local crypto, file, json, node, table = crypto, file, sjson,   node, table
+local crypto, file, json, node, table = crypto, file, sjson, node, table
 local stripdebug, gc = node.stripdebug, collectgarbage
 local log = self.log
 
 local buf = {}
 gc(); gc()
 
-local function getbuf()  -- upval: buf, table
+local function getbuf() -- upval: buf, table
   if #buf > 0 then return table.remove(buf, 1) end -- else return nil
 end
 
 -- Process a provisioning request record
-local function receiveRec(socket, rec)  -- upval: self, buf, crypto
+local function receiveRec(socket, rec) -- upval: self, buf, crypto
   -- Note that for 2nd and subsequent responses, we assme that the service has
   -- "authenticated" itself, so any protocol errors are fatal and lkely to
   -- cause a repeating boot, throw any protocol errors are thrown.
   local buf, config, file, log = buf, self.config, file, self.log
-  local cmdlen = (rec:find('\n',1, true) or 0) - 1
-  local cmd,hash = rec:sub(1,cmdlen-6), rec:sub(cmdlen-5,cmdlen)
+  local cmdlen = (rec:find('\n', 1, true) or 0) - 1
+  local cmd, hash = rec:sub(1, cmdlen - 6), rec:sub(cmdlen - 5, cmdlen)
   if cmdlen < 16 or
-     hash ~= crypto.toHex(crypto.hmac("MD5",cmd,self.secret):sub(-3)) then
+  hash ~= crypto.toHex(crypto.hmac("MD5", cmd, self.secret):sub(-3)) then
     return error("Invalid command signature")
   end
 
   local s; s, cmd = pcall(json.decode, cmd)
-  local action,resp = cmd.a, {s = "OK"}
+  local action, resp = cmd.a, {s = "OK"}
   local chunk
   gc(); gc()
 
   if action == "ls" then
     log("ls:", node.heap())
-    for name,len in pairs(file.list()) do
+    for name, len in pairs(file.list()) do
       resp[name] = len
     end
 
@@ -41,68 +41,68 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
     log("mv:", node.heap())
     if file.exists(cmd.from) then
       if file.exists(cmd.to) then file.remove(cmd.to) end
-      if not file.rename(cmd.from,cmd.to) then
+      if not file.rename(cmd.from, cmd.to) then
         resp.s = "Rename failed"
       end
     end
 
   else
-    if action == "pu" or action == "cm"  or action == "dl" then
+    if action == "pu" or action == "cm" or action == "dl" then
       -- These commands have a data buffer appended to the received record
       if cmd.data == #rec - cmdlen - 1 then
-        buf[#buf+1] = rec:sub(cmdlen +2)
+        buf[#buf + 1] = rec:sub(cmdlen + 2)
       else
         error(("Record size mismatch, %u expected, %u received"):format(
-              cmd.data or "nil", #buf - cmdlen - 1))
+        cmd.data or "nil", #buf - cmdlen - 1))
       end
     end
 
     if action == "cm" then
       stripdebug(2)
-      log("cm",cmd.name,node.heap())
+      log("cm", cmd.name, node.heap())
       gc(); gc()
-      local lcf,msg = load(getbuf, cmd.name)
-      log("Heap-62:", node.heap())
+      local lcf, msg = load(getbuf, cmd.name)
       if not msg then
         gc(); gc()
-        log("Heap-65:", node.heap())
-        local code, name = string.dump(lcf), cmd.name:sub(1,-5) .. ".lc"
+        local code, name = string.dump(lcf), cmd.name:sub(1, - 5) .. ".lc"
         local s = file.open(name, "w+")
-        log("Heap-68:", node.heap())
         if s then
           for i = 1, #code, 1024 do
-            s = s and file.write(code:sub(i, ((i+1023)>#code) and i+1023 or #code))
+            s = s and file.write(code:sub(i, ((i + 1023) > #code) and i + 1023 or #code))
           end
           file.close()
           if not s then file.remove(name) end
         end
         if s then
-          resp.lcsize=#code
+          resp.lcsize = #code
           print("Updated ".. name)
           log("Heap:", node.heap())
         else
           msg = "file write failed"
         end
-     end
-     if msg then
-        resp.s, resp.err  = "compile fail", msg
-     end
-     buf = {}
+      end
+      if msg then
+        resp.s, resp.err = "compile fail", msg
+      end
+      buf = {}
 
     elseif action == "dl" then
       log("dl:", node.heap())
-      gc(); gc()
       local s = file.open(cmd.name, "w+")
       if s then
         for i = 1, #buf do
-           s = s and file.write(buf[i])
+          s = s and file.write(buf[i])
+          buf[i] = nil
         end
         file.close()
       end
 
       if s then
         print("Updated ".. cmd.name)
-        log("Heap:", node.heap())
+        if ( cmd.name ~= "init.lua" ) then
+          node.compile(cmd.name)
+          file.remove(cmd.name)
+        end
       else
         file.remove(name)
         resp.s = "write failed"
@@ -125,7 +125,7 @@ local function receiveRec(socket, rec)  -- upval: self, buf, crypto
       file.close()
       socket:close()
       print("Restarting to load new application")
-      node.restart()  -- reboot just schedules a restart
+      node.restart() -- reboot just schedules a restart
       return
     end
   end
