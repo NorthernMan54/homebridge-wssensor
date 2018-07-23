@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local lua_mdns = nil
 
 local function hb_found(ws)
@@ -7,14 +9,6 @@ local function hb_found(ws)
   print("Reset watch dog")
   tmr.softwd(600)
   led.connected()
-
-  print(math.floor(collectgarbage("count")))
-  collectgarbage()
-  print(math.floor(collectgarbage("count")))
-  collectgarbage()
-  print(math.floor(collectgarbage("count")))
-  collectgarbage()
-  print("Heap Available: -pre motion  " .. node.heap() )
 
   -- Load personaility module
 
@@ -47,22 +41,14 @@ local function hb_found(ws)
 
     led.mdns()
     lua_mdns = require("lua-mdns")
-    lua_mdns.mdns_query("_wssensorTest._tcp", hb_found)
+    lua_mdns.mdns_query("_"..config.mdnsName.."._tcp", hb_found)
   end
 
   -- Start of code, reboot if not connected within 60 seconds
   tmr.softwd(60)
 
-  --STEP2: compile all .lua files to .lc files
-local compilelua = "compile.lua"
-if file.exists(compilelua) then
-    dofile(compilelua)(compilelua)
-end
-compilelua = nil
-dofile("compile.lc")()
-
   print("Heap Available:  " .. node.heap()) -- 38984
-  config = require("config")
+  config = require("config-"..wifi.sta.gethostname())
   print("Heap Available: config " .. node.heap()) -- 37248 1500
   led = require("led")
   print("Heap Available: led " .. node.heap()) -- 34200 3000

@@ -58,31 +58,25 @@ local function receiveRec(socket, rec) -- upval: self, buf, crypto
     end
 
     if action == "cm" then
-      stripdebug(2)
-      log("cm", cmd.name, node.heap())
-      gc(); gc()
-      local lcf, msg = load(getbuf, cmd.name)
-      if not msg then
-        gc(); gc()
-        local code, name = string.dump(lcf), cmd.name:sub(1, - 5) .. ".lc"
-        local s = file.open(name, "w+")
-        if s then
-          for i = 1, #code, 1024 do
-            s = s and file.write(code:sub(i, ((i + 1023) > #code) and i + 1023 or #code))
-          end
-          file.close()
-          if not s then file.remove(name) end
+      log("cm:", node.heap())
+      local s = file.open(cmd.name, "w+")
+      if s then
+        for i = 1, #buf do
+          s = s and file.write(buf[i])
+          buf[i] = nil
         end
-        if s then
-          resp.lcsize = #code
-          print("Updated ".. name)
-          log("Heap:", node.heap())
-        else
-          msg = "file write failed"
-        end
+        file.close()
       end
-      if msg then
-        resp.s, resp.err = "compile fail", msg
+
+      if s then
+        print("Updated ".. cmd.name)
+        if ( cmd.name ~= "init.lua" ) then
+          node.compile(cmd.name)
+          file.remove(cmd.name)
+        end
+      else
+        file.remove(name)
+        resp.s = "write failed"
       end
       buf = {}
 
@@ -99,10 +93,6 @@ local function receiveRec(socket, rec) -- upval: self, buf, crypto
 
       if s then
         print("Updated ".. cmd.name)
-        if ( cmd.name ~= "init.lua" ) then
-          node.compile(cmd.name)
-          file.remove(cmd.name)
-        end
       else
         file.remove(name)
         resp.s = "write failed"

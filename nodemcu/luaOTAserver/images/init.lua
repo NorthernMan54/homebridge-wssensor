@@ -1,5 +1,6 @@
 --SAFETRIM
---DEBUG=true
-
 require "luaOTA.check"
-dofile("test.lc")
+
+tmr.create():alarm(30000, tmr.ALARM_SINGLE, function()
+  dofile("main.lc")
+end)

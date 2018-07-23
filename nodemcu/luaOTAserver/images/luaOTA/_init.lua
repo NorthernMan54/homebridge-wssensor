@@ -25,7 +25,7 @@
 
   for k,v in pairs(args or {}) do config[k] = (v ~= "nil" and v) end
 
-  config.id = node.chipid()
+  config.id = wifi.sta.gethostname()
   config.a  = "HI"
 
   self.config = config

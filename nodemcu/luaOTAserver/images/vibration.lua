@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local module = {}
 
 local vibrationIdle = tmr.create()

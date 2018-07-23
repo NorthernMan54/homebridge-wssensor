@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local module = {}
 
 local mpu = require('mpu6050')

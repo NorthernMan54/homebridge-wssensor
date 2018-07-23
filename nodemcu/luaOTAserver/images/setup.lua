@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local module = {}
 
 local function wifi_start(list_aps)

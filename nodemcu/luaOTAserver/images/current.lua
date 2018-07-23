@@ -1,3 +1,5 @@
+--SAFETRIM
+
 local module = {}
 
 local currentMonitor = tmr.create()

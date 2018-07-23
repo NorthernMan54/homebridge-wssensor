@@ -1,3 +1,4 @@
+--SAFETRIM
 local module = {}
 
 local mode = 0
