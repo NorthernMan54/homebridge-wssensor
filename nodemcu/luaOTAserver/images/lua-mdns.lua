@@ -18,7 +18,7 @@ local function mdns_make_query(service)
   -- header: transaction id, flags, qdcount, ancount, nscount, nrcount
   local data = '\000\000'..'\000\000'..'\000\001'..'\000\000'..'\000\000'..'\000\000'
   -- question section: qname, qtype, qclass
-  for n in service:gfind('([^\.]+)') do
+  for n in service:gfind('([^\046]+)') do
     data = data..string.char(#n)..n
   end
   return data..string.char(0)..'\000\012'..'\000\001'
