@@ -1,4 +1,4 @@
 --SAFETRIM
---DEBUG=true
+DEBUG=true
 
 require "luaOTA.check"

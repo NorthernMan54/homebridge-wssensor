@@ -15,6 +15,7 @@
     "garage.lua",
     "json.lua",
     "vibration.lua",
+    "lua-mdns.lua",
     "init.lua",
     "luaOTA/_doTick.lua",
     "luaOTA/_init.lua",

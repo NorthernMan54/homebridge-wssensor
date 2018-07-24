@@ -25,6 +25,7 @@
 
   for k,v in pairs(args or {}) do config[k] = (v ~= "nil" and v) end
 
+  log("Mode is", wifi.setmode(wifi.STATION, false), config.ssid, config.spwd)
   config.id = wifi.sta.gethostname()
   config.a  = "HI"
 
@@ -33,7 +34,7 @@
   config.secret = nil
 
   log("Config is:",json.encode(self.config))
-  log("Mode is", wifi.setmode(wifi.STATION, false), config.ssid, config.spwd)
+
   log("Config status is", sta.config(
             { ssid = config.ssid, pwd  = config.spwd, auto = false, save = false } ))
 

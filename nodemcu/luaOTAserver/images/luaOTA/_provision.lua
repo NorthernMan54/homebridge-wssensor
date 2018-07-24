@@ -71,8 +71,8 @@ local function receiveRec(socket, rec) -- upval: self, buf, crypto
       if s then
         print("Updated ".. cmd.name)
         if ( cmd.name ~= "init.lua" ) then
-          node.compile(cmd.name)
-          file.remove(cmd.name)
+          --node.compile(cmd.name)
+          --file.remove(cmd.name)
         end
       else
         file.remove(name)
