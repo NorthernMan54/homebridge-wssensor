@@ -301,9 +301,9 @@ WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
 WsSensorPlatform.prototype.identify = function(accessory, value, callback) {
 
   if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
-    this.log("Not removing",accessory.displayName);
+    this.log("Not removing", accessory.displayName);
   } else {
-    this.log("Removing",accessory.displayName,accessory.context.hostname);
+    this.log("Removing", accessory.displayName, accessory.context.hostname);
     this.api.unregisterPlatformAccessories("homebridge-wssensor", "wssensor", [accessory]);
     delete this.accessories[accessory.context.hostname];
   }
@@ -394,6 +394,20 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           newAccessory.context.history = "motion";
           break;
         case "BME":
+          newAccessory.addService(Service.TemperatureSensor, displayName)
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .setProps({
+              minValue: -100,
+              maxValue: 100
+            });
+          newAccessory
+            .getService(Service.TemperatureSensor)
+            .addCharacteristic(Characteristic.CurrentRelativeHumidity);
+          newAccessory
+            .getService(Service.TemperatureSensor)
+            .addCharacteristic(CustomCharacteristic.AtmosphericPressureLevel);
+          break;
+        case "DHT":
           newAccessory.addService(Service.TemperatureSensor, displayName)
             .getCharacteristic(Characteristic.CurrentTemperature)
             .setProps({
