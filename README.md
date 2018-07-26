@@ -68,11 +68,13 @@ sudo npm install -g homebridge-wssensor
 }
 ```
 
-* `port`    - Listener port for sensor to send data to
-* `refresh` - Polling frequency, defaults to 60 seconds
-* `storage` - Storage of chart graphing data for history graphing, either fs or googleDrive, defaults to fs
-* `leak`    - Leak sensor alarm trigger percentage, defaults to 10%
-* `aliases` - Friendly names for your sensor's
+* `port`      - Listener port for sensor to send data to
+* `refresh`   - Polling frequency, defaults to 60 seconds
+* `storage`   - Storage of chart graphing data for history graphing, either fs or googleDrive, defaults to fs
+* `leak`      - Leak sensor alarm trigger percentage, defaults to 10%
+* `service`   - Bonjour service name for discovery, defaults to "wssensor"
+* `duration`  - Duration of motion sensor events, defaults to 10 seconds
+* `aliases`   - Friendly names for your sensor's
 
 # Configuration - NodeMCU
 

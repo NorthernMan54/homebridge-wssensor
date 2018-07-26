@@ -60,6 +60,7 @@ function WsSensorPlatform(log, config, api) {
     this.storage = config.storage || "fs";
     this.duration = config['duration'] || 10; // Duration of on event in seconds ( ACL )
     this.sensitivity = config['sensitivity'] || 400; // Sensitivity of sensor ( ACL )
+    this.service = config['service'] || "wssensor";
 
   } else {
     this.log.error("config undefined or null!");
@@ -101,8 +102,8 @@ function WsSensorPlatform(log, config, api) {
       this.log("Plugin - DidFinishLaunching");
 
       this.Websocket.startServer();
+      this.Advertise.createAdvertisement(this.service);
 
-      this.Advertise.createAdvertisement("wssensorTest");
 
       debug("Number of cached Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
@@ -301,9 +302,9 @@ WsSensorPlatform.prototype.setSensitivity = function(value, callback) {
 WsSensorPlatform.prototype.identify = function(accessory, value, callback) {
 
   if (accessory.ws && accessory.ws.readyState === WebSocket.OPEN) {
-    this.log("Not removing",accessory.displayName);
+    this.log("Not removing", accessory.displayName);
   } else {
-    this.log("Removing",accessory.displayName,accessory.context.hostname);
+    this.log("Removing", accessory.displayName, accessory.context.hostname);
     this.api.unregisterPlatformAccessories("homebridge-wssensor", "wssensor", [accessory]);
     delete this.accessories[accessory.context.hostname];
   }
@@ -394,6 +395,20 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           newAccessory.context.history = "motion";
           break;
         case "BME":
+          newAccessory.addService(Service.TemperatureSensor, displayName)
+            .getCharacteristic(Characteristic.CurrentTemperature)
+            .setProps({
+              minValue: -100,
+              maxValue: 100
+            });
+          newAccessory
+            .getService(Service.TemperatureSensor)
+            .addCharacteristic(Characteristic.CurrentRelativeHumidity);
+          newAccessory
+            .getService(Service.TemperatureSensor)
+            .addCharacteristic(CustomCharacteristic.AtmosphericPressureLevel);
+          break;
+        case "DHT":
           newAccessory.addService(Service.TemperatureSensor, displayName)
             .getCharacteristic(Characteristic.CurrentTemperature)
             .setProps({
