@@ -67,18 +67,18 @@ local function receiveRec(socket, rec) -- upval: self, buf, crypto
         end
         file.close()
       end
-
+      buf = {}
       if s then
         print("Updated ".. cmd.name)
         if ( cmd.name ~= "init.lua" ) then
-          --node.compile(cmd.name)
-          --file.remove(cmd.name)
+            gc(); gc()
+          node.compile(cmd.name)
+          file.remove(cmd.name)
         end
       else
         file.remove(name)
         resp.s = "write failed"
       end
-      buf = {}
 
     elseif action == "dl" then
       log("dl:", node.heap())
@@ -94,7 +94,7 @@ local function receiveRec(socket, rec) -- upval: self, buf, crypto
       if s then
         print("Updated ".. cmd.name)
       else
-        file.remove(name)
+        file.remove(cmd.name)
         resp.s = "write failed"
       end
       buf = {}

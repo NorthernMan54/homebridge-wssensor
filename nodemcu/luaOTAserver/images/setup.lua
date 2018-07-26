@@ -14,6 +14,7 @@ local function wifi_start(list_aps)
         found = 1
       end
     end
+    passwords = nil
     if found == 0 then
       print("Error finding AP")
       led.error(1)
@@ -25,14 +26,10 @@ local function wifi_start(list_aps)
 end
 
 function module.start(wifi_ready)
-  package.loaded[module]=nil
-  print("Configuring Wifi ...")
+  package.loaded["setup"]=nil
   wifi.setmode(wifi.STATION)
-  print("Configuring Wifi ...")
   wifi.eventmon.register(wifi.eventmon.STA_GOT_IP,wifi_ready)
-  print("Configuring Wifi ...")
   wifi.sta.getap(0,wifi_start)
-  print("Configuring Wifi ...")
 end
 
 return module

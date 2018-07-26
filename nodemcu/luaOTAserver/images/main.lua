@@ -22,40 +22,41 @@ local function hb_found(ws)
     end
   end
 
-    print("Heap Available: personaility  " .. node.heap() )
-    ms.start("ws://"..ws.ipv4..":"..ws.port)
+  package.loaded["main"]=nil
+  print("Heap Available: personaility  " .. node.heap() )
+  ms.start("ws://"..ws.ipv4..":"..ws.port)
 
-  end
+end
 
-  local function wifi_ready()
-    print("\n====================================")
-    print("Name is:         "..config.ID)
-    print("ESP8266 mode is: " .. wifi.getmode())
-    print("MAC address is: " .. wifi.ap.getmac())
-    print("IP is "..wifi.sta.getip())
-    print("====================================")
-    setup = nil
-    wifi.eventmon.unregister(wifi.eventmon.STA_GOT_IP)
+local function wifi_ready()
+  print("\n====================================")
+  print("Name is:         "..config.ID)
+  print("ESP8266 mode is: " .. wifi.getmode())
+  print("MAC address is: " .. wifi.ap.getmac())
+  print("IP is "..wifi.sta.getip())
+  print("====================================")
+  setup = nil
+  wifi.eventmon.unregister(wifi.eventmon.STA_GOT_IP)
 
-    print("Heap Available: -mdns  " .. node.heap() ) -- 18720
+  print("Heap Available: -mdns  " .. node.heap() ) -- 18720
 
-    led.mdns()
-    lua_mdns = require("lua-mdns")
-    lua_mdns.mdns_query("_"..config.mdnsName.."._tcp", hb_found)
-  end
+  led.mdns()
+  lua_mdns = require("lua-mdns")
+  lua_mdns.mdns_query("_"..config.mdnsName.."._tcp", hb_found)
+end
 
+return {entry = function(msg)
   -- Start of code, reboot if not connected within 60 seconds
   tmr.softwd(60)
-
   print("Heap Available:  " .. node.heap()) -- 38984
   config = require("config-"..wifi.sta.gethostname())
   print("Heap Available: config " .. node.heap()) -- 37248 1500
   led = require("led")
-  print("Heap Available: led " .. node.heap()) -- 34200 3000
-
+  print("Heap Available: led " .. node.heap()) -- 34200 3000ß
   local setup = require("setup")
   collectgarbage()
   print("Heap Available: setup " .. node.heap()) -- 23280 4000
 
   led.boot()
   setup.start(wifi_ready)
+end}

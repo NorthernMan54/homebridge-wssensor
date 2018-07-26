@@ -66,7 +66,7 @@ function module.read(motion, motionStatus, current)
   end
   --      print("Heap Available:" .. node.heap())
   --      print("33")
-  majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
+  local majorVer, minorVer, devVer, chipid, flashid, flashsize, flashmode, flashspeed = node.info()
   --      print("35")
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..

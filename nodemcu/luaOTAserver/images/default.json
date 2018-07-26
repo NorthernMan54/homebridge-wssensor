@@ -21,7 +21,6 @@
     "luaOTA/_init.lua",
     "luaOTA/_provision.lua",
     "luaOTA/check.lua",
-    "luaOTA/config.json",
     "luaOTA/default.lua"
   ]
 }

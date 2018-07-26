@@ -93,7 +93,7 @@ function module.start(wsserver)
 
   end)
 
-  function motionEvent(value)
+  local function motionEvent(value)
 
     print("Door event")
     local sensors = require("sensors")
