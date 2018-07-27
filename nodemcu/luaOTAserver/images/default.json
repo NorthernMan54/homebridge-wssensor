@@ -1,9 +1,15 @@
 {
   "secret": "yoursecret",
   "files": [
+    "luaOTA/_doTick.lua",
+    "luaOTA/_init.lua",
+    "luaOTA/_provision.lua",
+    "luaOTA/check.lua",
+    "luaOTA/default.lua",
+    "init.lua",
+    "initOta.lua",
     "accel.lua",
     "bme.lua",
-    "config-NODE-AC5812.lua",
     "current.lua",
     "passwords.lua",
     "led.lua",
@@ -15,12 +21,8 @@
     "garage.lua",
     "json.lua",
     "vibration.lua",
-    "lua-mdns.lua",
-    "init.lua",
-    "luaOTA/_doTick.lua",
-    "luaOTA/_init.lua",
-    "luaOTA/_provision.lua",
-    "luaOTA/check.lua",
-    "luaOTA/default.lua"
+    "config-NODE-AC5812.lua",
+    "config-NODE-869815.lua",
+    "lua-mdns.lua"
   ]
 }

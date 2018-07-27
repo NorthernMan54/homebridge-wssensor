@@ -17,54 +17,54 @@
 
 ]]
 
-local socket     = require "socket"
-local lfs        = require "lfs"
-local md5        = require "md5"
-local json       = require "cjson"
-require "etc.strict"  --  see http://www.lua.org/extras/5.1/strict.lua
+local socket = require "socket"
+local lfs = require "lfs"
+local md5 = require "md5"
+local json = require "cjson"
+require "etc.strict" --  see http://www.lua.org/extras/5.1/strict.lua
 
 -- Local functions (implementation see below) ------------------------------------------
 
-local get_inventory     -- function(root_directory, CPU_ID)
-local send_command      -- function(esp, resp, buffer)
+local get_inventory -- function(root_directory, CPU_ID)
+local send_command -- function(esp, resp, buffer)
 local receive_and_parse -- function(esp)
-local provision         -- function(esp, config, files, inventory, fingerprint)
-local read_file         -- function(fname)
-local save_file         -- function(fname, data)
-local compress_lua      -- function(lua_file)
-local hmac              -- function(data)
+local provision -- function(esp, config, files, inventory, fingerprint)
+local read_file -- function(fname)
+local save_file -- function(fname, data)
+local compress_lua -- function(lua_file)
+local hmac -- function(data)
 
 -- Function-wide locals (can be upvalues)
 local unpack = table.unpack or unpack
 local concat = table.concat
-local load   = load
+local load = load
 local format = string.format
 -- use string % operators as a synomyn for string.format
 getmetatable("").__mod =
-   function(a, b)
-      return not b and a or
-       (type(b) == "table" and format(a, unpack(b)) or format(a, b))
-      end
+function(a, b)
+  return not b and a or
+  (type(b) == "table" and format(a, unpack(b)) or format(a, b))
+end
 
-local ESPport    = 8266
+local ESPport = 8266
 local ESPtimeout = 15
 
-local src_dir    = arg[1] or "."
+local src_dir = arg[1] or "."
 
 -- Main process ------------------------ do encapsulation to prevent name-clash upvalues
 local function main ()
-  local server     = assert(socket.bind("*", ESPport))
-  local ip, port   = server:getsockname()
+  local server = assert(socket.bind("*", ESPport))
+  local ip, port = server:getsockname()
 
   print("Lua OTA service listening on  %s:%u\n After connecting, the ESP timeout is %u s"
-     % {ip, port, ESPtimeout})
+  % {ip, port, ESPtimeout})
 
   -- Main loop forever waiting for ESP clients then processing each request ------------
 
 
   while true do
-    local esp = server:accept()           -- wait for ESP connection
-    esp:settimeout(ESPtimeout)            -- set session timeout
+    local esp = server:accept() -- wait for ESP connection
+    esp:settimeout(ESPtimeout) -- set session timeout
     -- receive the opening request
     local config = receive_and_parse(esp)
     if config and config.a == "HI" then
@@ -72,13 +72,13 @@ local function main ()
       local inventory, fingerprint = get_inventory(src_dir, config.id)
       -- Process the ESP request
       if config.chk and config.chk == fingerprint then
-        send_command(esp, {r = "OK!"})       -- no update so send_command with OK
-        esp:receive("*l")                    -- dummy receive to allow client to close
+        send_command(esp, {r = "OK!"}) -- no update so send_command with OK
+        esp:receive("*l") -- dummy receive to allow client to close
       else
         local status, msg = pcall(provision, esp, config, inventory, fingerprint)
         if not status then print (msg) end
 
-    end
+      end
     end
     pcall(esp.close, esp)
     print ("Provisioning complete")
@@ -91,10 +91,10 @@ local function get_hmac_md5(key)
   if key:len() > 64 then
     key = md5.sum(key)
   elseif key:len() < 64 then
-    key = key .. ('\0'):rep(64-key:len())
+    key = key .. ('\0'):rep(64 - key:len())
   end
-  local ki = md5.exor(('\54'):rep(64),key)
-  local ko = md5.exor(('\92'):rep(64),key)
+  local ki = md5.exor(('\54'):rep(64), key)
+  local ko = md5.exor(('\92'):rep(64), key)
   return function (data) return md5.sumhexa(ko..md5.sum(ki..data)) end
 end
 
@@ -112,33 +112,33 @@ get_inventory = function(dir, cpuid)
   end
 
   -- tolerate and remove whitespace formatting, then decode
-  inventory = (inventory or ""):gsub("[ \t]*\n[ \t]*","")
-  inventory = inventory:gsub("[ \t]*:[ \t]*",":")
-  local ok; ok,inventory = pcall(json.decode, inventory)
+  inventory = (inventory or ""):gsub("[ \t]*\n[ \t]*", "")
+  inventory = inventory:gsub("[ \t]*:[ \t]*", ":")
+  local ok; ok, inventory = pcall(json.decode, inventory)
   if ok and inventory.files then
     print( "Loading %s inventory for ESP-%s" % {invtype, cpuid})
   else
-    error( "Invalid inventory for %s :%s" % {cpuid,inventory}, 0)
+    error( "Invalid inventory for %s :%s" % {cpuid, inventory}, 0)
   end
 
   -- Calculate the current fingerprint of the inventory
-  local fp,f = {},inventory.files
-  for i= 1,#f do
+  local fp, f = {}, inventory.files
+  for i = 1, #f do
     local name, fullname = f[i], "%s/%s" % {dir, f[i]}
     local fa = lfs.attributes(fullname)
 
     assert(fa, "File %s is required but not in sources directory" % name)
-    fp[#fp+1] = name .. ":" .. fa.modification
+    fp[#fp + 1] = name .. ":" .. fa.modification
     f[i] = {name = name, mtime = fa.modification,
-            size = fa.size, content = read_file(fullname) }
+    size = fa.size, content = read_file(fullname) }
     assert (f[i].size == #(f[i].content or ''), "File %s unreadable" % name )
   end
 
-  assert(#f == #fp, "Aborting provisioning die to missing fies",0)
+  assert(#f == #fp, "Aborting provisioning die to missing fies", 0)
   assert(type(inventory.secret) == "string",
-         "Aborting, config must contain a shared secret")
+  "Aborting, config must contain a shared secret")
   hmac = get_hmac_md5(inventory.secret)
-  return inventory, md5.sumhexa(concat(fp,":"))
+  return inventory, md5.sumhexa(concat(fp, ":"))
 end
 
 
@@ -152,7 +152,7 @@ send_command = function(esp, resp, buffer)
   end
   local rec = json.encode(resp)
   rec = rec .. hmac(rec):sub(-6) .."\n"
--- print("requesting ", rec:sub(1,-2), #(buffer or ''))
+  -- print("requesting ", rec:sub(1,-2), #(buffer or ''))
   esp:send(rec .. buffer)
 end
 
@@ -161,8 +161,8 @@ end
 ----------------------------------------------------------------------
 receive_and_parse = function(esp)
   local line = esp:receive("*l")
-  local packed_cmd, sig = line:sub(1,#line-6),line:sub(-6)
--- print("reply:", packed_cmd, sig)
+  local packed_cmd, sig = line:sub(1, #line - 6), line:sub(-6)
+  -- print("reply:", packed_cmd, sig)
   local status, cmd = pcall(json.decode, packed_cmd)
   if not hmac or hmac(packed_cmd):sub(-6) == sig then
     if cmd and cmd.data == "number" then
@@ -184,28 +184,32 @@ provision = function(esp, config, inventory, fingerprint)
     if not cf[name] or cf[name] ~= mtime then
       -- Send the file
       local func, action, cmd, buf
-      if  f.name:sub(-4) == ".lua" then
-        assert(load(content, f.name))  -- check that the contents can compile
+      if f.name:sub(-4) == ".lua" then
+        assert(load(content, f.name)) -- check that the contents can compile
         if content:find("--SAFETRIM\n",1,true) then
           -- if the source is tagged with SAFETRIM then its safe to remove "--"
           -- comments, leading and trailing whitespace.  Not as good as LuaSrcDiet,
           -- but this simple source compression algo preserves line numbering in
           -- the generated lc files, which helps debugging.
-          content = content:gsub("\n[ \t]+","\n")
-          content = content:gsub("[ \t]+\n","\n")
-          content = content:gsub("%-%-[^\n]*","")
+          content = content:gsub("\n[ \t]+", "\n")
+          content = content:gsub("[ \t]+\n", "\n")
+          content = content:gsub("%-%-[^\n]*", "")
           size = #content
         end
-        action = "cm"
+        if ( size < 6000 ) then -- If the file is too large, don't send as a compile file
+          action = "cm"
+        else
+          action = "dl"
+        end
       else
         action = "dl"
       end
-      print ("Sending file ".. name,size)
+      print ("Sending file ".. name, size)
 
       for i = 1, size, 1024 do
-        if i+1023 < size then
+        if i + 1023 < size then
           cmd = {a = "pu", data = 1024}
-          buf = content:sub(i, i+1023)
+          buf = content:sub(i, i + 1023)
         else
           cmd = {a = action, data = size - i + 1, name = name}
           buf = content:sub(i)
@@ -223,8 +227,8 @@ provision = function(esp, config, inventory, fingerprint)
   end
 
   config.chk = fingerprint
-  config.id  = nil
-  config.a   = "restart"
+  config.id = nil
+  config.a = "restart"
   send_command(esp, config)
 
 end
@@ -249,4 +253,4 @@ end
 
 --------------------------------------------------------------------------------------
 
-main()  -- now that all functions have been bound to locals, we can start the show :-)
+main() -- now that all functions have been bound to locals, we can start the show :-)

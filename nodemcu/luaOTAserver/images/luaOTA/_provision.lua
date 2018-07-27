@@ -8,7 +8,6 @@ local log = self.log
 
 local buf = {}
 gc(); gc()
-
 local function getbuf() -- upval: buf, table
   if #buf > 0 then return table.remove(buf, 1) end -- else return nil
 end
@@ -71,7 +70,8 @@ local function receiveRec(socket, rec) -- upval: self, buf, crypto
       if s then
         print("Updated ".. cmd.name)
         if ( cmd.name ~= "init.lua" ) then
-            gc(); gc()
+          gc(); gc()
+          log("cm:", node.heap())
           node.compile(cmd.name)
           file.remove(cmd.name)
         end
@@ -115,7 +115,9 @@ local function receiveRec(socket, rec) -- upval: self, buf, crypto
       file.close()
       socket:close()
       print("Restarting to load new application")
-      node.restart() -- reboot just schedules a restart
+      tmr.create():alarm(2000, tmr.ALARM_SINGLE, function()
+        node.restart() -- reboot just schedules a restart
+      end)
       return
     end
   end

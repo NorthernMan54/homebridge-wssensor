@@ -24,7 +24,6 @@ local function mdns_make_query(service)
   return data..string.char(0)..'\000\012'..'\000\001'
 end
 
-
 local function mdns_parse(service, data, answers)
 
   --- Helper function: parse DNS name field, supports pointers
@@ -144,7 +143,6 @@ local function mdns_parse(service, data, answers)
       end
       answers.aaaa[name] = aaaa
     end
-
     -- SRV record (service location)
     if (type == 33) then
       if (rdlength < 6) then
@@ -155,18 +153,14 @@ local function mdns_parse(service, data, answers)
         port = data:byte(rdoffset + 4) * 256 + data:byte(rdoffset + 5)
       }
     end
-
     -- next answer record
     offset = offset + 10 + rdlength
   end
-
   -- Additional records
-
   for i = 1, header.arcount do
     if (offset > len) then
       return nil, 'truncated'
     end
-
     name, offset = parse_name(data, offset)
     local type = data:byte(offset + 0) * 256 + data:byte(offset + 1)
     local rdlength = data:byte(offset + 8) * 256 + data:byte(offset + 9)
@@ -227,9 +221,8 @@ local function mdns_parse(service, data, answers)
   return answers
 end
 
-function module.mdns_query(service,callback)
-
-  package.loaded["lua-mdns"]=nil
+function module.mdns_query(service, callback)
+  package.loaded["lua-mdns"] = nil
   -- browse all services if no service name specified
   local browse = false
   if (not service) then
@@ -307,5 +300,4 @@ function module.mdns_query(service,callback)
   querySend:start()
 
 end
-
 return module
