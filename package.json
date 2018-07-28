@@ -1,6 +1,6 @@
 {
   "name": "homebridge-wssensor",
-  "version": "0.1.39",
+  "version": "0.1.40",
   "description": "Homebridge platform plugin that support's a network of nodemcu's to display Temperature and Humidity.",
   "main": "ws.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "express": "^4.13.3",
     "debug": "^2.2.0",
     "mdns": ">=2.3.3",
-    "ws": "^0.8.0",
+    "ws": "^=1.1.5",
     "fakegato-history": "^=0.4.0",
     "moment": "^2.20.1"
   },
