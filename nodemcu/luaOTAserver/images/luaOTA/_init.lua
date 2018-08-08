@@ -13,6 +13,30 @@
   local wifi, file, json, tmr = wifi, file, sjson, tmr
   local log, sta, config = self.log, wifi.sta, nil
 
+  local function _wifiConnect(availableAccessPoints)
+    local passwords = require(self.prefix.."passwords")
+    package.loaded[self.prefix.."passwords"]=nil
+    if availableAccessPoints then
+      local found = 0
+      for key,value in pairs(availableAccessPoints) do
+        if passwords.SSID and passwords.SSID[key] then
+          sta.config(passwords.SSID[key])
+          sta.connect()
+          print("Connecting to " .. key .. " ...")
+          found = 1
+        end
+      end
+      passwords = nil
+      if found == 0 then
+        print("Error finding AP")
+        --led.error(1)
+      end
+    else
+      print("Error getting AP list")
+      --led.error(2)
+    end
+  end
+
   print ("\nStarting Provision Checks")
   log("Starting Heap:", node.heap())
 
@@ -25,7 +49,7 @@
 
   for k,v in pairs(args or {}) do config[k] = (v ~= "nil" and v) end
 
-  log("Mode is", wifi.setmode(wifi.STATION, false), config.ssid, config.spwd)
+  --log("Mode is", wifi.setmode(wifi.STATION, false), config.ssid, config.spwd)
   config.id = wifi.sta.gethostname()
   config.a  = "HI"
 
@@ -35,14 +59,15 @@
 
   log("Config is:",json.encode(self.config))
 
-  log("Config status is", sta.config(
-            { ssid = config.ssid, pwd  = config.spwd, auto = false, save = false } ))
+  --log("Config status is", sta.config(
+  --          { ssid = config.ssid, pwd  = config.spwd, auto = false, save = false } ))
 
-  if config.espip then
-    log( "Static IP setup:", sta.setip(
-            { ip = config.espip, gateway = config.gw, netmask = config.nm }))
-  end
-  sta.connect(1)
+  --if config.espip then
+  --  log( "Static IP setup:", sta.setip(
+  --          { ip = config.espip, gateway = config.gw, netmask = config.nm }))
+  --end
+  --sta.connect(1)
+  sta.getap(0,_wifiConnect)
 
   package.loaded[self.modname] = nil
   self.modname=nil

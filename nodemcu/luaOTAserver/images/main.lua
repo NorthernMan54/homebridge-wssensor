@@ -53,10 +53,10 @@ return {entry = function(msg)
   print("Heap Available: config " .. node.heap()) -- 37248 1500
   led = require("led")
   print("Heap Available: led " .. node.heap()) -- 34200 3000ß
-  local setup = require("setup")
-  collectgarbage()
-  print("Heap Available: setup " .. node.heap()) -- 23280 4000
+  --local setup = require("setup")
+  --collectgarbage()
+  --print("Heap Available: setup " .. node.heap()) -- 23280 4000
 
   led.boot()
-  setup.start(wifi_ready)
+  wifi_ready()
 end}

@@ -4,6 +4,7 @@ local module = {}
 
 local function wifi_start(list_aps)
   local passwords = require("passwords")
+  package.loaded["passwords"]=nil
   if list_aps then
     local found = 0
     for key,value in pairs(list_aps) do

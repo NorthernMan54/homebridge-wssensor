@@ -52,7 +52,7 @@ function self.startApp(arg) --upval: gc, self, tmr, wifi
   self.post(function() --upval: appMod, appMethod, arg
     self = nil
     print("arg")
-    tmr.create():alarm(2000, tmr.ALARM_SINGLE, function()
+    tmr.create():alarm(10000, tmr.ALARM_SINGLE, function()
       print("Running program",appMod,appMethod)
       require(appMod)[appMethod](arg)
     end)

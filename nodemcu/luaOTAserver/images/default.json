@@ -11,7 +11,7 @@
     "accel.lua",
     "bme.lua",
     "current.lua",
-    "passwords.lua",
+    "luaOTA/passwords.lua",
     "led.lua",
     "motion.lua",
     "mpu6050.lua",
