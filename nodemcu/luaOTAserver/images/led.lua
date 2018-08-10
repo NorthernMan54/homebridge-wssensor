@@ -12,7 +12,7 @@ local function start()
   gpio.mode(config.ledRed, gpio.OUTPUT)
 
   local lighton=0
-  tmr.alarm(0,1000,1,function()
+  tmr.alarm(0,250,1,function()
       if lighton==0 then
         lighton=1
         if mode == 0 then

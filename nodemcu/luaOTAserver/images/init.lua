@@ -1,4 +1,6 @@
 --SAFETRIM
 
 DEBUG=true
-require "luaOTA.check"
+tmr.create():alarm(1000, tmr.ALARM_SINGLE, function()
+  require "luaOTA.check"
+end)
