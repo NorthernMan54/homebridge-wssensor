@@ -4,6 +4,7 @@
     "luaOTA/_doTick.lua",
     "luaOTA/_init.lua",
     "luaOTA/_provision.lua",
+    "luaOTA/_mdns.lua",
     "luaOTA/check.lua",
     "luaOTA/default.lua",
     "init.lua",

@@ -21,6 +21,7 @@ local socket = require "socket"
 local lfs = require "lfs"
 local md5 = require "md5"
 local json = require "cjson"
+--local lua_mdns = require "etc.lua_mdns"
 require "etc.strict" --  see http://www.lua.org/extras/5.1/strict.lua
 
 -- Local functions (implementation see below) ------------------------------------------

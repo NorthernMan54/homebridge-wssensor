@@ -7,6 +7,7 @@ local wifi, net = wifi, net
 local sta = wifi.sta
 local config, log, startApp = self.config, self.log, self.startApp
 local tick_count = 0
+local lua_mdns
 
 local function socket_close(socket) --upval: self, startApp
   if rawget(self, "socket") then
@@ -45,6 +46,16 @@ local function socket_connect(socket) --upval: self, socket_connect
   return self.socket_send(socket, self.config)
 end
 
+local function hb_found(ws)
+  lua_mdns = nil
+  hb_found = nil
+  log("Found provioning server",ws.port, ws.ipv4)
+  conn = net.createConnection(net.TCP, 0)
+  conn:on("connection", socket_connect)
+  conn:on("disconnection", socket_close)
+  conn:connect(8266, ws.ipv4)
+end
+
 local conn
 gpio.mode(0, gpio.OUTPUT)
 gpio.mode(4, gpio.OUTPUT)
@@ -64,10 +75,12 @@ return function() -- the proper doTick() timer callback
       if (config.nsserver) then
         net.dns.setdnsserver(config.nsserver, 0)
       end
-      conn = net.createConnection(net.TCP, 0)
-      conn:on("connection", socket_connect)
-      conn:on("disconnection", socket_close)
-      conn:connect(config.port, config.server)
+      lua_mdns = require("luaOTA/_mdns")
+      lua_mdns.mdns_query("_wssensorTest._tcp", hb_found)
+      --conn = net.createConnection(net.TCP, 0)
+      --conn:on("connection", socket_connect)
+      --conn:on("disconnection", socket_close)
+      --conn:connect(config.port, config.server)
 
       tick_count = 20
     end
@@ -75,10 +88,17 @@ return function() -- the proper doTick() timer callback
   elseif (tick_count == 20) then -- assume timeout and exec app CB
     return self.startApp("OK: Timeout on waiting for wifi station setup")
 
-  elseif (tick_count == 26) then -- wait up to 2.5 secs for TCP response
+  elseif (tick_count == 36) then -- wait up to 2.5 secs for TCP response
+    print("1")
     gpio.write(0, gpio.HIGH)
+    print("2")
     tmr.unregister(0)
-    pcall(conn.close, conn)
+    print("3")
+    print("3",conn)
+    if ( conn ~= nil ) then
+      pcall(conn.close, conn)
+    end
+    print("4")
     self.socket = nil
     return startApp("OK: Timeout on waiting for provision service response")
   end
