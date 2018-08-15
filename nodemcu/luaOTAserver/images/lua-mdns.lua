@@ -295,6 +295,8 @@ function module.mdns_query(service, callback)
     sendcount = sendcount - 1
     if sendcount < 1 then
       t:unregister()
+      print("MDNS Not found")
+      udpSocket:close()
     end
   end)
   querySend:start()

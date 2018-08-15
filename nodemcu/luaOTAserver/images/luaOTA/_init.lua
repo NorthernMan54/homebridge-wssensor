@@ -49,6 +49,7 @@
 
   for k,v in pairs(args or {}) do config[k] = (v ~= "nil" and v) end
 
+  wifi.sta.clearconfig()
   log("Mode is", wifi.setmode(wifi.STATION, false))
   config.id = wifi.sta.gethostname()
   config.a  = "HI"

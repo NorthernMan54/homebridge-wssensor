@@ -28,6 +28,8 @@ local function receiveFirstRec(socket, rec) -- upval: self, crypto, startApp, tm
     self.post(function() --upval: socket
       if socket then pcall(socket.close, socket) end
     end)
+    pcall(conn.close, conn)
+    conn = nil
     return startApp("OK! No further updates needed")
   end
   -- Else a valid request has been received from the provision service free up
@@ -77,10 +79,6 @@ return function() -- the proper doTick() timer callback
       end
       lua_mdns = require("luaOTA/_mdns")
       lua_mdns.mdns_query("_wssensorTest._tcp", hb_found)
-      --conn = net.createConnection(net.TCP, 0)
-      --conn:on("connection", socket_connect)
-      --conn:on("disconnection", socket_close)
-      --conn:connect(config.port, config.server)
 
       tick_count = 20
     end
@@ -96,6 +94,7 @@ return function() -- the proper doTick() timer callback
     print("3")
     print("3",conn)
     if ( conn ~= nil ) then
+      print("Closing socket")
       pcall(conn.close, conn)
     end
     print("4")
