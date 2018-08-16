@@ -51,11 +51,11 @@ end
 local function hb_found(ws)
   lua_mdns = nil
   hb_found = nil
-  log("Found provioning server",ws.port, ws.ipv4)
+  log("Found provioning server",ws.ipv4,ws.port)
   conn = net.createConnection(net.TCP, 0)
   conn:on("connection", socket_connect)
   conn:on("disconnection", socket_close)
-  conn:connect(8266, ws.ipv4)
+  conn:connect(ws.port, ws.ipv4)
 end
 
 local conn
@@ -78,7 +78,7 @@ return function() -- the proper doTick() timer callback
         net.dns.setdnsserver(config.nsserver, 0)
       end
       lua_mdns = require("luaOTA/_mdns")
-      lua_mdns.mdns_query("_wssensorTest._tcp", hb_found)
+      lua_mdns.mdns_query("_"..config.server.."._tcp", hb_found)
 
       tick_count = 20
     end
@@ -87,17 +87,12 @@ return function() -- the proper doTick() timer callback
     return self.startApp("OK: Timeout on waiting for wifi station setup")
 
   elseif (tick_count == 36) then -- wait up to 2.5 secs for TCP response
-    print("1")
     gpio.write(0, gpio.HIGH)
-    print("2")
     tmr.unregister(0)
-    print("3")
-    print("3",conn)
     if ( conn ~= nil ) then
       print("Closing socket")
       pcall(conn.close, conn)
     end
-    print("4")
     self.socket = nil
     return startApp("OK: Timeout on waiting for provision service response")
   end

@@ -32,14 +32,9 @@ local movementA, movementG, Temperature = 0, 0, 0
 local trigger = false
 local status = nil
 
-function module.init()
-  -- Initialize sensors
-  i2c.setup(id, config.mpu6050sda, config.mpu6050scl, i2c.SLOW) -- initialize i2c
-  MPU6050_Init()
 
-end
 
-function I2C_Write(deviceAddress, regAddress, data)
+local function I2C_Write(deviceAddress, regAddress, data)
   i2c.start(id) -- send start condition
   if (i2c.address(id, deviceAddress, i2c.TRANSMITTER))-- set slave address and transmit direction
   then
@@ -51,7 +46,7 @@ function I2C_Write(deviceAddress, regAddress, data)
   end
 end
 
-function I2C_Read(deviceAddress, regAddress, SizeOfDataToRead)
+local function I2C_Read(deviceAddress, regAddress, SizeOfDataToRead)
   local response = 0;
   i2c.start(id) -- send start condition
   if (i2c.address(id, deviceAddress, i2c.TRANSMITTER))-- set slave address and transmit direction
@@ -69,14 +64,14 @@ function I2C_Read(deviceAddress, regAddress, SizeOfDataToRead)
   return response
 end
 
-function unsignTosigned16bit(num) -- convert unsigned 16-bit no. to signed 16-bit no.
+local function unsignTosigned16bit(num) -- convert unsigned 16-bit no. to signed 16-bit no.
   if num > 32768 then
     num = num - 65536
   end
   return num
 end
 
-function MPU6050_Init() --configure MPU6050
+local function MPU6050_Init() --configure MPU6050
   --tmr.delay(150000)
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_SMPLRT_DIV, 0x07)
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_PWR_MGMT_1, 0x01)
@@ -90,7 +85,7 @@ function MPU6050_Init() --configure MPU6050
   I2C_Write(MPU6050SlaveAddress, MPU6050_REGISTER_USER_CTRL, 0x00)
 end
 
-function _Round(X)
+local function _Round(X)
   return math.floor(math.abs(X / 800 ))
 end
 
@@ -164,11 +159,18 @@ function module.read( )
   local response =
   "{ \"Hostname\": \""..config.ID.."\", \"Model\": \""..config.Model.."\", \"Version\": \""..config.Version..
   "\", \"Uptime\": "..upTime..", \"Firmware\": \""..majorVer.."."..minorVer.."."..devVer.."\", \"Data\": { "..
-  accelstring.." }}\n"
+    accelstring.." }}\n"
 
---print(response)
+    --print(response)
 
-return response
+  return response
+end
+
+function module.init()
+    -- Initialize sensors
+    i2c.setup(id, config.mpu6050sda, config.mpu6050scl, i2c.SLOW) -- initialize i2c
+    MPU6050_Init()
+
 end
 
 return module
