@@ -15,6 +15,14 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 * Support for Legacy mcuiot mode?
 * Support for data logging to mcuiot-logger?
 
+# Supported configurations
+
+* [x] AM312 or HC-SR501 Motion Sensor and BME280 or DHT22 Temperature sensor
+* [x] MPU6050 Gyro / Acceleration sensor
+* [x] Garage Door monitor / control
+* [ ] YL-69 Moisture Sensor / BME-280
+* [ ] Standalone BME280 Temperature Sensor
+
 # Supported sensors
 
 * HC-SR501 Motion Sensor Module ( This one generates alot of false positives )
@@ -42,6 +50,7 @@ Plugin for NodeMCU Based sensors using WebSockets for realtime updates
 * [x] Sensor sends state changes in realtime to plugin via WebSockets
 * [x] Allow sensor to warm up before publishing, I believe I read 1 minute
 * [x] Have sensor send not available status during warm up period -- Not required
+* [x] Support for OTA Updates
 * [ ] Have sensor support multiple websocket servers
 * [ ] Support for Legacy mcuiot mode
 * [x] Stop committing passwords to github!! -- Done
