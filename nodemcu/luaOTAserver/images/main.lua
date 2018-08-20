@@ -9,6 +9,7 @@ local function hb_found(ws)
   print("Reset watch dog")
   tmr.softwd(600)
   led.connected()
+  led=nil
 
   -- Load personaility module
 
@@ -25,7 +26,7 @@ local function hb_found(ws)
   package.loaded["main"]=nil
   print("Heap Available: personaility  " .. node.heap() )
   ms.start("ws://"..ws.ipv4..":"..ws.port)
-
+  ms=nil
 end
 
 local function wifi_ready()
@@ -50,6 +51,7 @@ return {entry = function(msg)
   tmr.softwd(60)
   print("Heap Available:  " .. node.heap()) -- 38984
   config = require("config-"..wifi.sta.gethostname())
+  package.loaded["config-"..wifi.sta.gethostname()]=nil
   print("Heap Available: config " .. node.heap()) -- 37248 1500
   led = require("led")
   print("Heap Available: led " .. node.heap()) -- 34200 3000ß

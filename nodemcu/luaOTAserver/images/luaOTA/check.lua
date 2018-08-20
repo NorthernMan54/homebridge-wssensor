@@ -18,6 +18,7 @@ local concat, unpack = table.concat, unpack or table.unpack
 local self = {post = node.task.post, prefix = "luaOTA/", conf = {}}
 
 self.log = (DEBUG == true) and print or function() end
+local log = self.log
 self.modname = ...
 
 --------------------------------------------------------------------------------------
@@ -28,8 +29,10 @@ setmetatable( self, {__index = function(self, func) --upval: loadfile
   -- The convention is that functions starting with "_" are treated as
   -- call-once / ephemeral; the rest are registered in self
   func = self.prefix .. func
+  log("pre: loadfile", func, node.heap())
   local f, msg = loadfile( func..".lc")
   if msg then f, msg = loadfile(func..".lua") end
+  log("post: loadfile", func, node.heap())
   if msg then error (msg, 2) end
   if func:sub(8, 8) ~= "_" then self[func] = f end
   return f
@@ -41,7 +44,7 @@ function self.sign(arg) --upval: crypto, json, self
 end
 
 function self.startApp(arg) --upval: gc, self, tmr, wifi
-  package.loaded["luaOTA.check"]=nil
+  --package.loaded["luaOTA.check"]=nil
   gc();gc()
   tmr.unregister(0)
   self.socket = nil
@@ -50,10 +53,12 @@ function self.startApp(arg) --upval: gc, self, tmr, wifi
   local appMethod = self.config.entry or "entry"
   if not arg then arg = "General timeout on provisioning" end
   self.post(function() --upval: appMod, appMethod, arg
+    log("pre: post", node.heap())
     self = nil
-    print("arg")
+    --print("arg",arg)
     tmr.create():alarm(2000, tmr.ALARM_SINGLE, function()
       print("Running program",appMod,appMethod)
+      log("pre: require", node.heap())
       require(appMod)[appMethod](arg)
     end)
   end)
@@ -66,6 +71,8 @@ end
 self.post(function() -- upval: self
 -- This config check is to prevent a double execution if the
 -- user invokes with "require 'luaOTA/check':_init( etc>)" form
+log("pre: _init", node.heap())
+package.loaded["luaOTA.check"]=nil
 if not rawget(self, "config") then self:_init() end
 end)
 

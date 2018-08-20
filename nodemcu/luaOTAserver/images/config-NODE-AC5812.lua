@@ -1,8 +1,8 @@
 --SAFETRIM
 
 local module = {}
-
 -- Options are DHT or DHT-YL, used by homebridge to determine if moisture data is valid.
+--package.loaded["config-NODE-AC5812"]=nil
 module.Model = "BME-GD"
 module.Version = "2.2"
 

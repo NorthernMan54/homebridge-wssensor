@@ -229,12 +229,11 @@ function module.mdns_query(service, callback)
     service = '_services._dns-sd._udp'
     browse = true
   end
-
   -- append .local if needed
   if (service:sub(-6) ~= '.local') then
     service = service..'.local'
   end
-
+  
   -- default timeout: 2 seconds
   local timeout = timeout or 2.0
   local answers = { srv = {}, a = {}, aaaa = {}, ptr = {} }

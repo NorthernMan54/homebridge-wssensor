@@ -54,6 +54,7 @@ function module.boot()
 end
 
 function module.connected()
+  package.loaded["led"]=nil
   mode = 1
 end
 

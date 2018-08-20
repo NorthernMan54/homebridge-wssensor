@@ -30,6 +30,7 @@ local function receiveFirstRec(socket, rec) -- upval: self, crypto, startApp, tm
     end)
     pcall(conn.close, conn)
     conn = nil
+    log("pre: startApp", node.heap())
     return startApp("OK! No further updates needed")
   end
   -- Else a valid request has been received from the provision service free up
@@ -37,6 +38,7 @@ local function receiveFirstRec(socket, rec) -- upval: self, crypto, startApp, tm
   -- timeout.  This also dereferences the previous doTick cb so it can now be GCed.
   collectgarbage()
   tmr.alarm(0, 30000, tmr.ALARM_SINGLE, self.startApp)
+  log("pre: _provision", node.heap())
   return self:_provision(socket, rec)
 end
 

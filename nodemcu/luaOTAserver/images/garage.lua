@@ -40,6 +40,7 @@ local function readSensor()
 end
 
 function module.start(wsserver)
+  package.loaded["garage"]=nil
   gpio.mode(config.gdrelay, gpio.OUTPUT)
   gpio.mode(config.gdopened, gpio.INT, gpio.PULLUP)
   gpio.mode(config.gdclosed, gpio.INT, gpio.PULLUP)
