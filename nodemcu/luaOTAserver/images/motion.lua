@@ -60,6 +60,7 @@ function module.start(wsserver)
       else
         if connected == true then
           print("Motion Event", value, math.floor((tmr.now() - tm) / 1000000 + 0.5))
+          led.flashRed()
           if value == 1 then
             onStart = tmr.time() + duration
             print("Time", tmr.time(), onStart)

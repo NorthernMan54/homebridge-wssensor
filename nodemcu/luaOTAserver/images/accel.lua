@@ -9,6 +9,7 @@ local onStart
 local offTimer = tmr.create()
 
 function module.start(wsserver)
+  package.loaded["accel"]=nil
   local tm = tmr.now()
   local last = 0
   local connected = false

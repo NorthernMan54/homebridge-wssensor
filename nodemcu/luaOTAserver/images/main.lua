@@ -9,7 +9,6 @@ local function hb_found(ws)
   print("Reset watch dog")
   tmr.softwd(600)
   led.connected()
-  led=nil
 
   -- Load personaility module
 

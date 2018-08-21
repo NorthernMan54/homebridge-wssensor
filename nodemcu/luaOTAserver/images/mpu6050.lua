@@ -168,6 +168,7 @@ end
 
 function module.init()
     -- Initialize sensors
+    package.loaded["mpu6050"]=nil
     i2c.setup(id, config.mpu6050sda, config.mpu6050scl, i2c.SLOW) -- initialize i2c
     MPU6050_Init()
 
