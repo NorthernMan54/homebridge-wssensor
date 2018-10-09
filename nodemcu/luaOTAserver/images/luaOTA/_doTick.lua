@@ -71,7 +71,7 @@ return function() -- the proper doTick() timer callback
   else
     gpio.write(0, gpio.LOW)
   end
-  log("entering tick", tick_count, sta.getconfig(false), sta.getip())
+  --log("entering tick", tick_count, sta.getconfig(false), sta.getip())
   if (tick_count < 20) then -- (wait up to 10 secs for Wifi connection)
     local status, ip = sta.status(), {sta.getip()}
     if (status == wifi.STA_GOTIP) then

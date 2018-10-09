@@ -10,7 +10,7 @@ module.ID = wifi.sta.gethostname()
 module.mdnsName = "wssensor"
 
 -- LED state
-module.ledState = 1 -- 0: fully disabled, 1: LEDs on, 2: Connected off (Boot/Error only)
+module.ledState = 2 -- 0: fully disabled, 1: LEDs on, 2: Connected off (Boot/Error only)
 
 module.ledRed = 0 -- gpio16
 module.ledBlue = 4 -- gpio2

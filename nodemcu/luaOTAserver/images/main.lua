@@ -5,7 +5,7 @@ local lua_mdns = nil
 local function hb_found(ws)
   print("WS Socket available http://"..ws.ipv4..":"..ws.port)
   lua_mdns = nil
-  print("Heap Available: -pre motion  " .. node.heap() )
+  print("Heap Available: pre personality  " .. node.heap() )
   print("Reset watch dog")
   tmr.softwd(600)
   led.connected()
@@ -14,18 +14,18 @@ local function hb_found(ws)
 
   if string.find(config.Model, "ACL") then
     ms = require('accel')
-  else
-    if string.find(config.Model, "GD") then
-      ms = require('garage')
-    else
-      ms = require('motion')
-    end
+  elseif string.find(config.Model, "GD") then
+    ms = require('garage')
+  elseif string.find(config.Model, "MS") then
+    ms = require('motion')
+  elseif string.find(config.Model, "LED") then
+    ms = require('led_strip')
   end
 
-  package.loaded["main"]=nil
+  package.loaded["main"] = nil
   print("Heap Available: personaility  " .. node.heap() )
   ms.start("ws://"..ws.ipv4..":"..ws.port)
-  ms=nil
+  ms = nil
 end
 
 local function wifi_ready()
@@ -50,7 +50,7 @@ return {entry = function(msg)
   tmr.softwd(60)
   print("Heap Available:  " .. node.heap()) -- 38984
   config = require("config-"..wifi.sta.gethostname())
-  package.loaded["config-"..wifi.sta.gethostname()]=nil
+  package.loaded["config-"..wifi.sta.gethostname()] = nil
   print("Heap Available: config " .. node.heap()) -- 37248 1500
   led = require("led")
   print("Heap Available: led " .. node.heap()) -- 34200 3000ß

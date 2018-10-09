@@ -3,7 +3,7 @@
 local module = {}
 -- Options are DHT or DHT-YL, used by homebridge to determine if moisture data is valid.
 --package.loaded["config-NODE-AC5812"]=nil
-module.Model = "BME-GD"
+module.Model = "LED"
 module.Version = "2.2"
 
 module.ID = wifi.sta.gethostname()
@@ -11,7 +11,7 @@ module.ID = wifi.sta.gethostname()
 module.mdnsName = "wssensorTest"
 
 -- LED state
-module.ledState = 1 -- 0: fully disabled, 1: LEDs on, 2: Connected off (Boot/Error only)
+module.ledState = 2 -- 0: fully disabled, 1: LEDs on, 2: Connected off (Boot/Error only)
 
 module.ledRed = 0   -- gpio16
 module.ledBlue = 4  -- gpio2

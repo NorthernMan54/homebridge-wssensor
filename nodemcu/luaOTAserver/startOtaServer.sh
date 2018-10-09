@@ -6,7 +6,7 @@ function ctrl_c() {
 	kill $mdns
 }
 
-if [[ "$OSTYPE" == 'darwin17' ]]; then
+if [[ "$OSTYPE" == 'darwin18' ]]; then
   dns-sd -R "My Test" _nodeProvision._tcp. local 8266 &
   mdns=$!
 elif [[ "$OSTYPE" == 'linux-gnueabihf' ]]; then

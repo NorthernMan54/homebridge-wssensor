@@ -116,9 +116,8 @@ function WsSensorPlatform(log, config, api) {
       for (var k in this.accessories) {
 
         var ws = this.accessories[k].ws;
-        debug("Poll", k, count);
+        debug("Poll", k, ++count);
         if (ws && ws.readyState === WebSocket.OPEN) {
-          count++;
           var msg = {
             "count": count,
             "sensitivity": this.sensitivity,

@@ -25,6 +25,7 @@
     "config-NODE-AC5812.lua",
     "config-NODE-869815.lua",
     "config-NODE-AC4A21.lua",
+    "led_strip.lua",
     "lua-mdns.lua"
   ]
 }
