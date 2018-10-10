@@ -43,7 +43,7 @@ function setColour()
   print("Changing colour", colours(colour))
   ws2812_effects.start()
   colour = colour + 1
-  if colour > 2 then colour = 0
+  if colour > 3 then colour = 0
   end
 end
 
@@ -79,6 +79,7 @@ function module.start(wsserver)
 
   mytimer:register(10000, tmr.ALARM_AUTO,
     function()
+      tmr.softwd(600)
       setMode()
   end)
 

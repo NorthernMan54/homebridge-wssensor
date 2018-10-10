@@ -8,6 +8,7 @@ local sta = wifi.sta
 local config, log, startApp = self.config, self.log, self.startApp
 local tick_count = 0
 local lua_mdns
+local gc=collectgarbage
 
 local function socket_close(socket) --upval: self, startApp
   if rawget(self, "socket") then
@@ -36,7 +37,7 @@ local function receiveFirstRec(socket, rec) -- upval: self, crypto, startApp, tm
   -- Else a valid request has been received from the provision service free up
   -- some resources that are no longer needed and set backstop timer for general
   -- timeout.  This also dereferences the previous doTick cb so it can now be GCed.
-  collectgarbage()
+  gc()
   tmr.alarm(0, 30000, tmr.ALARM_SINGLE, self.startApp)
   log("pre: _provision", node.heap())
   return self:_provision(socket, rec)
@@ -79,6 +80,8 @@ return function() -- the proper doTick() timer callback
       if (config.nsserver) then
         net.dns.setdnsserver(config.nsserver, 0)
       end
+      gc(); gc()
+      log("pre: _mdns", node.heap())
       lua_mdns = require("luaOTA/_mdns")
       lua_mdns.mdns_query("_"..config.server.."._tcp", hb_found)
 

@@ -294,7 +294,7 @@ function module.mdns_query(service, callback)
     end
     sendcount = sendcount - 1
     if sendcount < 1 then
-      print("Provisioning Service Not found")
+      --print("Provisioning Service Not found")
       udpSocket:close()
       t:unregister()
     end
