@@ -1,20 +1,25 @@
 --SAFETRIM
+
+-- Trimmed size by remove ipv6 support
+
 local module = {}
 
-local function dump(o)
-  if type(o) == 'table' then
-    local s = '{ '
-    for k, v in pairs(o) do
-      if type(k) ~= 'number' then k = '"'..k..'"' end
-      s = s .. '['..k..'] = ' .. dump(v) .. ','
-    end
-    return s .. '} '
-  else
-    return tostring(o)
-  end
-end
+--local function dump(o)
+--  print("mdns_dump")
+--  if type(o) == 'table' then
+--    local s = '{ '
+--    for k, v in pairs(o) do
+--      if type(k) ~= 'number' then k = '"'..k..'"' end
+--      s = s .. '['..k..'] = ' .. dump(v) .. ','
+--    end
+--    return s .. '} '
+--  else
+--    return tostring(o)
+--  end
+--end
 
 local function mdns_make_query(service)
+  --print("mdns_make_query")
   -- header: transaction id, flags, qdcount, ancount, nscount, nrcount
   local data = '\000\000'..'\000\000'..'\000\001'..'\000\000'..'\000\000'..'\000\000'
   -- question section: qname, qtype, qclass
@@ -25,13 +30,14 @@ local function mdns_make_query(service)
 end
 
 local function mdns_parse(service, data, answers)
-
+  --print("mdns.mdns_parse")
   --- Helper function: parse DNS name field, supports pointers
   -- @param data     received datagram
   -- @param offset    offset within datagram (1-based)
   -- @return  parsed name
   -- @return  offset of first byte behind name (1-based)
   local function parse_name(data, offset)
+    --print("mdns.parse_name")
     local n, d, l = '', '', data:byte(offset)
     while (l > 0) do
       if (l >= 192) then -- pointer
@@ -122,27 +128,27 @@ local function mdns_parse(service, data, answers)
     end
 
     -- AAAA record (IPv6 address)
-    if (type == 28) then
-      if (rdlength ~= 16) then
-        return nil, 'bad RDLENGTH with AAAA record'
-      end
-      local offs = rdoffset
-      local aaaa = string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
-      while (offs < rdoffset + 14) do
-        offs = offs + 2
-        aaaa = aaaa..':'..string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
-      end
+    --if (type == 28) then
+      --if (rdlength ~= 16) then
+      --  return nil, 'bad RDLENGTH with AAAA record'
+      --end
+      --local offs = rdoffset
+      --local aaaa = string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
+      --while (offs < rdoffset + 14) do
+      --  offs = offs + 2
+      --  aaaa = aaaa..':'..string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
+      --end
 
       -- compress IPv6 address
-      for _, s in ipairs({ ':0:0:0:0:0:0:0:', ':0:0:0:0:0:0:', ':0:0:0:0:0:', ':0:0:0:0:', ':0:0:0:', ':0:0:' }) do
-        local r = aaaa:gsub(s, '::')
-        if (r ~= aaaa) then
-          aaaa = r
-          break
-        end
-      end
-      answers.aaaa[name] = aaaa
-    end
+      --for _, s in ipairs({ ':0:0:0:0:0:0:0:', ':0:0:0:0:0:0:', ':0:0:0:0:0:', ':0:0:0:0:', ':0:0:0:', ':0:0:' }) do
+      --  local r = aaaa:gsub(s, '::')
+      --  if (r ~= aaaa) then
+      --    aaaa = r
+      --    break
+      --  end
+      --end
+      --answers.aaaa[name] = aaaa
+    --end
     -- SRV record (service location)
     if (type == 33) then
       if (rdlength < 6) then
@@ -181,27 +187,27 @@ local function mdns_parse(service, data, answers)
     end
 
     -- AAAA record (IPv6 address)
-    if (type == 28) then
-      if (rdlength ~= 16) then
-        return nil, 'bad RDLENGTH with AAAA record'
-      end
-      local offs = rdoffset
-      local aaaa = string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
-      while (offs < rdoffset + 14) do
-        offs = offs + 2
-        aaaa = aaaa..':'..string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
-      end
+    --if (type == 28) then
+    --  if (rdlength ~= 16) then
+    --    return nil, 'bad RDLENGTH with AAAA record'
+    --  end
+    --  local offs = rdoffset
+    --  local aaaa = string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
+    --  while (offs < rdoffset + 14) do
+    --    offs = offs + 2
+    --    aaaa = aaaa..':'..string.format('%x', data:byte(offs) * 256 + data:byte(offs + 1))
+    --  end
 
       -- compress IPv6 address
-      for _, s in ipairs({ ':0:0:0:0:0:0:0:', ':0:0:0:0:0:0:', ':0:0:0:0:0:', ':0:0:0:0:', ':0:0:0:', ':0:0:' }) do
-        local r = aaaa:gsub(s, '::')
-        if (r ~= aaaa) then
-          aaaa = r
-          break
-        end
-      end
-      answers.aaaa[name] = aaaa
-    end
+    --  for _, s in ipairs({ ':0:0:0:0:0:0:0:', ':0:0:0:0:0:0:', ':0:0:0:0:0:', ':0:0:0:0:', ':0:0:0:', ':0:0:' }) do
+    --    local r = aaaa:gsub(s, '::')
+    --    if (r ~= aaaa) then
+    --      aaaa = r
+    --      break
+    --    end
+    --  end
+    --  answers.aaaa[name] = aaaa
+    --end
 
     -- SRV record (service location)
     if (type == 33) then
