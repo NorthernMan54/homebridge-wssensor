@@ -60,6 +60,7 @@ function WsSensorPlatform(log, config, api) {
     this.storage = config.storage || "fs";
     this.duration = config['duration'] || 10; // Duration of on event in seconds ( ACL )
     this.sensitivity = config['sensitivity'] || 400; // Sensitivity of sensor ( ACL )
+    this.service = config['service'] || "wssensor";
 
   } else {
     this.log.error("config undefined or null!");
@@ -101,8 +102,8 @@ function WsSensorPlatform(log, config, api) {
       this.log("Plugin - DidFinishLaunching");
 
       this.Websocket.startServer();
+      this.Advertise.createAdvertisement(this.service);
 
-      this.Advertise.createAdvertisement("wssensor");
 
       debug("Number of cached Accessories: %s", cachedAccessories);
       this.log("Number of Accessories: %s", Object.keys(this.accessories).length);
@@ -115,9 +116,8 @@ function WsSensorPlatform(log, config, api) {
       for (var k in this.accessories) {
 
         var ws = this.accessories[k].ws;
-        debug("Poll", k, count);
+        debug("Poll", k, ++count);
         if (ws && ws.readyState === WebSocket.OPEN) {
-          count++;
           var msg = {
             "count": count,
             "sensitivity": this.sensitivity,

@@ -47,7 +47,7 @@ local function hb_found(ws)
 
     led.mdns()
     lua_mdns = require("lua-mdns")
-    lua_mdns.mdns_query("_wssensor._tcp", hb_found)
+    lua_mdns.mdns_query("_wssensorTest._tcp", hb_found)
   end
 
   -- Start of code, reboot if not connected within 60 seconds
