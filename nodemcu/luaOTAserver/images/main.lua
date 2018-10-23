@@ -18,8 +18,6 @@ local function hb_found(ws)
     ms = require('garage')
   elseif string.find(config.Model, "MS") then
     ms = require('motion')
-  elseif string.find(config.Model, "LED") then
-    ms = require('led_strip')
   end
 
   package.loaded["main"] = nil

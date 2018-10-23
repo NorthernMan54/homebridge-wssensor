@@ -6,11 +6,12 @@ function ctrl_c() {
 	kill $mdns
 }
 
-if [[ "$OSTYPE" == 'darwin18' ]]; then
-  dns-sd -R "My Test" _nodeProvision._tcp. local 8266 &
+OS=`uname -s`
+if [[ "$OS" == 'Darwin' ]]; then
+  dns-sd -R "My Test" _wssensorProv._tcp. local 8266 &
   mdns=$!
-elif [[ "$OSTYPE" == 'linux-gnueabihf' ]]; then
-  dns-sd -R "My Test" _nodeProvision._tcp. local 8266 &
+elif [[ "$OS" == 'Linux' ]]; then
+  avahi-publish  -s "My Test" _wssensorProv._tcp. 8266 &
   mdns=$!
 fi
 
