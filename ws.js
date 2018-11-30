@@ -61,6 +61,7 @@ function WsSensorPlatform(log, config, api) {
     this.duration = config['duration'] || 10; // Duration of on event in seconds ( ACL )
     this.sensitivity = config['sensitivity'] || 400; // Sensitivity of sensor ( ACL )
     this.service = config['service'] || "wssensor";
+    this.fakeGato = false;
 
   } else {
     this.log.error("config undefined or null!");
@@ -156,15 +157,19 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
         case "Motion":
           var value = message.Data[k] > 0;
           if (this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected).value != value) {
-            this.accessories[name].getService(Service.MotionSensor).getCharacteristic(CustomCharacteristic.LastActivation)
-              .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            if (this.fakeGato) {
+              this.accessories[name].getService(Service.MotionSensor).getCharacteristic(CustomCharacteristic.LastActivation)
+                .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            }
           }
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
             .updateValue(value);
-          this.accessories[name].mLoggingService.addEntry({
-            time: moment().unix(),
-            status: value
-          });
+          if (this.fakeGato) {
+            this.accessories[name].mLoggingService.addEntry({
+              time: moment().unix(),
+              status: value
+            });
+          }
           break;
         case "CurrentDoorState":
           var value = message.Data[k];
@@ -172,8 +177,10 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
           if (this.accessories[name].getService(Service.GarageDoorOpener)
             .getCharacteristic(Characteristic.CurrentDoorState).value != value) {
             // Only update on change in value
-            this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.LastActivation)
-              .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            if (this.fakeGato) {
+              this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.LastActivation)
+                .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            }
             if (value == 0) {
               // Only when opened
               this.accessories[name].getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.TimesOpened)
@@ -181,10 +188,12 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
             }
             if (value < 2) {
               // Only when opened and closed
-              this.accessories[name].mLoggingService.addEntry({
-                time: moment().unix(),
-                status: value % 2
-              });
+              if (this.fakeGato) {
+                this.accessories[name].mLoggingService.addEntry({
+                  time: moment().unix(),
+                  status: value % 2
+                });
+              }
             }
           }
 
@@ -201,12 +210,14 @@ WsSensorPlatform.prototype.sendEvent = function(err, message) {
           debug("Trigger", value);
           this.accessories[name].getService(Service.MotionSensor).getCharacteristic(Characteristic.MotionDetected)
             .updateValue(value);
-          this.accessories[name].getService(Service.MotionSensor).getCharacteristic(CustomCharacteristic.LastActivation)
-            .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
-          this.accessories[name].mLoggingService.addEntry({
-            time: moment().unix(),
-            status: value
-          });
+          if (this.fakeGato) {
+            this.accessories[name].getService(Service.MotionSensor).getCharacteristic(CustomCharacteristic.LastActivation)
+              .updateValue(moment().unix() - this.accessories[name].mLoggingService.getInitialTime());
+            this.accessories[name].mLoggingService.addEntry({
+              time: moment().unix(),
+              status: value
+            });
+          }
           break;
 
         case "Temperature":
@@ -445,10 +456,12 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
       }
     }
     newAccessory.log = this.log;
-    newAccessory.mLoggingService = new FakeGatoHistoryService(newAccessory.context.history, newAccessory, {
-      storage: this.storage,
-      minutes: this.refresh * 10 / 60
-    });
+    if (this.fakeGato) {
+      newAccessory.mLoggingService = new FakeGatoHistoryService(newAccessory.context.history, newAccessory, {
+        storage: this.storage,
+        minutes: this.refresh * 10 / 60
+      });
+    }
 
     //    newAccessory.wLoggingService = new FakeGatoHistoryService("weather", newAccessory, {
     //      storage: this.storage,
@@ -485,10 +498,12 @@ WsSensorPlatform.prototype.configureAccessory = function(accessory) {
       .on('set', this.setResetTotal.bind(accessory));
   }
   accessory.log = this.log;
-  accessory.mLoggingService = new FakeGatoHistoryService(accessory.context.history, accessory, {
-    storage: this.storage,
-    minutes: this.refresh * 10 / 60
-  });
+  if (this.fakeGato) {
+    accessory.mLoggingService = new FakeGatoHistoryService(accessory.context.history, accessory, {
+      storage: this.storage,
+      minutes: this.refresh * 10 / 60
+    });
+  }
 
   //  accessory.wLoggingService = new FakeGatoHistoryService("weather", accessory, {
   //    storage: this.storage,
