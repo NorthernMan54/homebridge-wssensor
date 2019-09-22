@@ -381,6 +381,8 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
           newAccessory
             .getService(Service.GarageDoorOpener).getCharacteristic(CustomCharacteristic.ResetTotal)
             .on('set', this.setResetTotal.bind(newAccessory));
+          newAccessory
+            .getService(Service.GarageDoorOpener).isPrimaryService = true;
           newAccessory.context.history = "door";
           break;
         case "MS":
@@ -402,6 +404,8 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
             .getService(Service.MotionSensor)
             .getCharacteristic(CustomCharacteristic.Duration)
             .on('set', this.setDuration.bind(this));
+          newAccessory
+            .getService(Service.MotionSensor).isPrimaryService = true;
           newAccessory.context.history = "motion";
           break;
         case "BME":
@@ -449,6 +453,8 @@ WsSensorPlatform.prototype.addAccessory = function(accessoryDef, ws) {
               minValue: -100,
               maxValue: 100
             });
+          newAccessory
+            .getService(Service.MotionSensor).isPrimaryService = true;
           newAccessory.context.history = "motion";
           break;
         default:
