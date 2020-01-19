@@ -284,7 +284,7 @@ WsSensorPlatform.prototype.setTargetDoorState = function(accessory, value, callb
   this.log("setTargetDoorState Request", accessory.displayName, value);
   var msg = {
     "count": count,
-    "button": 300
+    "button": 1000
   }
 
   if (accessory.getService(Service.GarageDoorOpener).getCharacteristic(Characteristic.TargetDoorState).value != value) {
